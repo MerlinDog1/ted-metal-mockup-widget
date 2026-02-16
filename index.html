@@ -132,6 +132,8 @@
     .scene-card { border:1px solid #304763; border-radius:12px; background:#0f1a30; overflow:hidden; }
     .scene-head { display:flex; justify-content:space-between; gap:8px; padding:8px 10px; font-size:.78rem; color:#cde1ff; border-bottom:1px solid #2e425f; }
     .scene-card img { width:100%; height:220px; object-fit:cover; display:block; background:#0b1322; }
+    .scene-card.portrait img { height:420px; object-fit:cover; }
+    .scene-card.wall img { height:260px; object-fit:cover; }
 
     .history { margin-top: 10px; border-top: 1px dashed #2f425f; padding-top: 10px; }
     .history h4 { margin:0 0 8px; font-size:.88rem; color:#cde3ff; }
@@ -282,18 +284,21 @@ const sceneGalleryEl = document.getElementById('sceneGallery');
 const scenePresets = [
   {
     key:'scan2d',
+    cls:'scan',
     title:'2D Technical Scan',
     prompt:'Flat orthographic face-on scan view. Entire panel fully visible edge-to-edge, centered, no perspective distortion, white/neutral background, clean technical product shot with minimal reflections.'
   },
   {
     key:'elevator',
-    title:'Elevator Door Install (Vertical)',
-    prompt:'Vertical portrait composition. Close-up of elevator exterior with a clear vertical center seam where the two doors meet. Show stainless door rails and realistic mounting scale. Keep panel art unchanged.'
+    cls:'portrait',
+    title:'Elevator Door Install (9:16 Vertical)',
+    prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Show stainless door rails and realistic mounting scale. Keep panel art unchanged.'
   },
   {
     key:'wall',
-    title:'Floor-to-Ceiling Wall Clad',
-    prompt:'Show this pattern as a single large panel used in floor-to-ceiling wall cladding context in an upscale architectural interior, realistic scale, no stylization.'
+    cls:'wall',
+    title:'Floor-to-Ceiling Wall Cladding (~30°)',
+    prompt:'Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Real fabrication scale, no stylization.'
   }
 ];
 
@@ -415,7 +420,7 @@ function renderSceneGallery(){
     return;
   }
   sceneGalleryEl.innerHTML = generatedScenes.map((sc, i) => `
-    <article class="scene-card">
+    <article class="scene-card ${sc.cls||''}">
       <div class="scene-head"><b>${sc.title}</b><span class="muted">view ${i+1}</span></div>
       <img src="${sc.dataUrl}" alt="${sc.title}">
     </article>
@@ -496,6 +501,7 @@ async function generateMockup(){
       `Material: ${metal}. Finish: ${finish}. Mounting: ${mount}. Lighting scene: ${lighting}.`,
       'Visual goal: premium architectural product photo for world-class etched brass/stainless panel fabrication.',
       'CRITICAL OUTPUT STYLE: realistic engraved metal panel, not an artistic painting or carved mural texture.',
+      finish === 'aged' ? 'Aged patina should be subtle surface color variation only. No deep carved relief or gouged texture.' : '',
       direction ? `Additional direction: ${direction}` : ''
     ].filter(Boolean).join(' ');
 
