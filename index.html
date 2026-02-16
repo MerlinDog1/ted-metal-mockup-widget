@@ -189,24 +189,12 @@
         </div>
 
         <div style="height:10px"></div>
-        <div class="row">
-          <div>
-            <label>Mount style</label>
-            <select id="mount">
-              <option value="floating">Floating standoffs</option>
-              <option value="screw-caps">Visible screw caps</option>
-              <option value="wood-backer">Wood backer mount</option>
-            </select>
-          </div>
-          <div>
-            <label>Lighting scene</label>
-            <select id="lighting">
-              <option value="studio">Studio product shot</option>
-              <option value="lobby">Architectural lobby</option>
-              <option value="daylight">Soft daylight wall</option>
-            </select>
-          </div>
-        </div>
+        <label>Lighting scene</label>
+        <select id="lighting">
+          <option value="studio">Studio product shot</option>
+          <option value="lobby">Architectural lobby</option>
+          <option value="daylight">Soft daylight wall</option>
+        </select>
 
         <div style="height:10px"></div>
         <label>Direction (optional)</label>
@@ -438,11 +426,10 @@ function renderHistory(){
   arr.forEach((h, idx) => {
     const d = document.createElement('div');
     d.className = 'hist';
-    d.innerHTML = `<div><div><b>${h.sample || 'Uploaded SVG'}</b></div><div class="muted">${h.metal} · ${h.finish} · ${h.mount} · ${h.sceneCount||0} views</div><div class="muted">${new Date(h.ts).toLocaleString()}</div></div><button class="btn secondary" style="padding:5px 8px;font-size:.72rem">Reuse</button>`;
+    d.innerHTML = `<div><div><b>${h.sample || 'Uploaded SVG'}</b></div><div class="muted">${h.metal} · ${h.finish} · ${h.sceneCount||0} views</div><div class="muted">${new Date(h.ts).toLocaleString()}</div></div><button class="btn secondary" style="padding:5px 8px;font-size:.72rem">Reuse</button>`;
     d.querySelector('button').onclick = () => {
       document.getElementById('metal').value = h.metal;
       document.getElementById('finish').value = h.finish;
-      document.getElementById('mount').value = h.mount;
       document.getElementById('lighting').value = h.lighting;
       document.getElementById('direction').value = h.direction || '';
       setStatus('Loaded revision settings. (Select/upload source pattern if needed)', 'ok');
@@ -474,7 +461,6 @@ async function generateMockup(){
 
   const metal = document.getElementById('metal').value;
   const finish = document.getElementById('finish').value;
-  const mount = document.getElementById('mount').value;
   const lighting = document.getElementById('lighting').value;
   const direction = document.getElementById('direction').value.trim();
 
@@ -498,7 +484,7 @@ async function generateMockup(){
       '- Do NOT hallucinate extra artwork or background patterning inside the panel.',
       '- Metal should remain mostly clean; etch contrast comes from the provided vector only.',
       '- The output must align pixel-for-pixel with source geometry silhouette.',
-      `Material: ${metal}. Finish: ${finish}. Mounting: ${mount}. Lighting scene: ${lighting}.`,
+      `Material: ${metal}. Finish: ${finish}. Lighting scene: ${lighting}.`,
       'Visual goal: premium architectural product photo for world-class etched brass/stainless panel fabrication.',
       'CRITICAL OUTPUT STYLE: realistic engraved metal panel, not an artistic painting or carved mural texture.',
       finish === 'aged' ? 'Aged patina should be subtle surface color variation only. No deep carved relief or gouged texture.' : '',
@@ -538,7 +524,6 @@ function saveRevision(){
     sample: selectedSampleName,
     metal: document.getElementById('metal').value,
     finish: document.getElementById('finish').value,
-    mount: document.getElementById('mount').value,
     lighting: document.getElementById('lighting').value,
     direction: document.getElementById('direction').value.trim(),
     sceneCount: generatedScenes.length
