@@ -283,17 +283,17 @@ const scenePresets = [
   {
     key:'scan2d',
     title:'2D Technical Scan',
-    prompt:'Flat orthographic face-on scan view. Entire panel fully visible edge-to-edge, centered, no perspective distortion, white or neutral background.'
+    prompt:'Flat orthographic face-on scan view. Entire panel fully visible edge-to-edge, centered, no perspective distortion, white/neutral background, clean technical product shot with minimal reflections.'
   },
   {
     key:'elevator',
     title:'Elevator Door Install (Vertical)',
-    prompt:'Vertical portrait composition. Close-up of elevator exterior with a clear vertical center seam where the two doors meet. Panel mounted realistically with true proportions and visible architectural context.'
+    prompt:'Vertical portrait composition. Close-up of elevator exterior with a clear vertical center seam where the two doors meet. Show stainless door rails and realistic mounting scale. Keep panel art unchanged.'
   },
   {
     key:'wall',
     title:'Floor-to-Ceiling Wall Clad',
-    prompt:'Show this pattern as large wall cladding from floor to ceiling in an upscale architectural interior, realistic scale and repetition.'
+    prompt:'Show this pattern as a single large panel used in floor-to-ceiling wall cladding context in an upscale architectural interior, realistic scale, no stylization.'
   }
 ];
 
@@ -489,10 +489,13 @@ async function generateMockup(){
       '- Do NOT move, rotate, scale, crop, redraw, or restyle vector features.',
       '- Preserve exact line weights, spacing, proportions, and negative space.',
       '- Treat black regions as engraved/enamel geometry exactly as supplied.',
-      '- Do not add or remove strokes, ornaments, textures, symbols, text, or flourishes.',
+      '- Do not add or remove strokes, ornaments, textures, symbols, text, flourishes, or painterly brush effects.',
+      '- Do NOT hallucinate extra artwork or background patterning inside the panel.',
+      '- Metal should remain mostly clean; etch contrast comes from the provided vector only.',
       '- The output must align pixel-for-pixel with source geometry silhouette.',
       `Material: ${metal}. Finish: ${finish}. Mounting: ${mount}. Lighting scene: ${lighting}.`,
       'Visual goal: premium architectural product photo for world-class etched brass/stainless panel fabrication.',
+      'CRITICAL OUTPUT STYLE: realistic engraved metal panel, not an artistic painting or carved mural texture.',
       direction ? `Additional direction: ${direction}` : ''
     ].filter(Boolean).join(' ');
 
