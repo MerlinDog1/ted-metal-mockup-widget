@@ -132,7 +132,7 @@
     .scene-card { border:1px solid #304763; border-radius:12px; background:#0f1a30; overflow:hidden; }
     .scene-head { display:flex; justify-content:space-between; gap:8px; padding:8px 10px; font-size:.78rem; color:#cde1ff; border-bottom:1px solid #2e425f; }
     .scene-card img { width:100%; height:220px; object-fit:cover; display:block; background:#0b1322; }
-    .scene-card.portrait img { height:420px; object-fit:cover; }
+    .scene-card.portrait img { height:auto; aspect-ratio:9/16; object-fit:contain; background:#0b1322; }
     .scene-card.wall img { height:260px; object-fit:cover; }
 
     .history { margin-top: 10px; border-top: 1px dashed #2f425f; padding-top: 10px; }
@@ -497,7 +497,7 @@ async function generateMockup(){
       setStatus(`Rendering scene ${i+1}/${scenePresets.length}: ${sc.title}…`);
       const scenePrompt = [strictLock, `Scene directive: ${sc.prompt}`].join(' ');
       const dataUrl = await callImageModel(imageBase64, scenePrompt);
-      generatedScenes.push({ key: sc.key, title: sc.title, dataUrl });
+      generatedScenes.push({ key: sc.key, cls: sc.cls, title: sc.title, dataUrl });
       if (sc.key === 'scan2d') {
         generatedDataUrl = dataUrl;
         compareSplit = 50;
