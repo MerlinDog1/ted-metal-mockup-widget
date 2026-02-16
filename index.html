@@ -127,6 +127,12 @@
     .status.ok { color: var(--ok); }
     .status.error { color: var(--err); }
 
+    .scene-grid { margin-top: 12px; display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
+    @media (max-width: 760px){ .scene-grid { grid-template-columns: 1fr; } }
+    .scene-card { border:1px solid #304763; border-radius:12px; background:#0f1a30; overflow:hidden; }
+    .scene-head { display:flex; justify-content:space-between; gap:8px; padding:8px 10px; font-size:.78rem; color:#cde1ff; border-bottom:1px solid #2e425f; }
+    .scene-card img { width:100%; height:220px; object-fit:cover; display:block; background:#0b1322; }
+
     .history { margin-top: 10px; border-top: 1px dashed #2f425f; padding-top: 10px; }
     .history h4 { margin:0 0 8px; font-size:.88rem; color:#cde3ff; }
     .hist-list { display:grid; gap:6px; max-height:180px; overflow:auto; }
@@ -230,6 +236,8 @@
             <div id="compareWrap" class="preview"><div class="muted">Generated etched output appears here</div></div>
           </div>
         </div>
+        <div style="margin-top:10px" class="hint">Context mockups (multi-scene render)</div>
+        <div id="sceneGallery" class="scene-grid"></div>
       </section>
     </div>
   </div>
@@ -255,6 +263,7 @@ const sampleData = [
 let currentSvgText = '';
 let currentSourcePngDataUrl = '';
 let generatedDataUrl = '';
+let generatedScenes = [];
 let activeCategory = 'All';
 let selectedSampleName = '';
 let compareSplit = 50;
@@ -268,6 +277,15 @@ const goBtn = document.getElementById('go');
 const dlBtn = document.getElementById('download');
 const saveRevBtn = document.getElementById('saveRev');
 const historyList = document.getElementById('historyList');
+const sceneGalleryEl = document.getElementById('sceneGallery');
+
+const scenePresets = [
+  { key:'hero', title:'Hero Product Shot', prompt:'Centered product shot on neutral backdrop. Keep entire geometry visible and sharp. Premium architectural catalog style.' },
+  { key:'elevator', title:'Elevator Door Install', prompt:'Install this etched panel on brushed elevator doors in a luxury tower lobby, realistic scale, straight-on perspective.' },
+  { key:'wall', title:'Floor-to-Ceiling Wall Clad', prompt:'Show this pattern as large wall cladding from floor to ceiling in an upscale architectural interior, realistic scale and repetition.' },
+  { key:'scan2d', title:'2D Technical Scan', prompt:'Flat orthographic 2D scan-style presentation on white background with ultra-crisp etch visibility and no perspective distortion.' }
+];
+
 
 function setStatus(msg, type='info'){
   statusEl.className = `status ${type==='ok'?'ok':''} ${type==='error'?'error':''}`;
@@ -326,7 +344,7 @@ function renderSamples(){
         currentSvgText = s.svg;
         renderSvgPreview(currentSvgText);
         currentSourcePngDataUrl = await svgToPngDataUrl(currentSvgText, 1200);
-        renderCompare();
+        generatedDataUrl = ''; generatedScenes = []; renderCompare(); renderSceneGallery();
         setStatus(`Loaded sample: ${s.name}`, 'ok');
         renderSamples();
       };
@@ -357,6 +375,42 @@ function renderCompare(){
   });
 }
 
+
+async function callImageModel(imageBase64, fullPrompt){
+  const r = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      task: 'image',
+      imageModel: 'gemini-3-pro-image-preview',
+      prompt: fullPrompt,
+      imageBase64,
+      imageMimeType: 'image/png'
+    })
+  });
+  const txt = await r.text();
+  let j = {};
+  try { j = JSON.parse(txt); } catch {}
+  if(!r.ok) throw new Error(j.error || txt || `Request failed (${r.status})`);
+  const b64 = j.bytesBase64Encoded;
+  const mime = j.mimeType || 'image/png';
+  if(!b64) throw new Error('No image returned by model.');
+  return `data:${mime};base64,${b64}`;
+}
+
+function renderSceneGallery(){
+  if(!generatedScenes.length){
+    sceneGalleryEl.innerHTML = '<div class="muted">Generate to see mockups in different installed contexts.</div>';
+    return;
+  }
+  sceneGalleryEl.innerHTML = generatedScenes.map((sc, i) => `
+    <article class="scene-card">
+      <div class="scene-head"><b>${sc.title}</b><span class="muted">view ${i+1}</span></div>
+      <img src="${sc.dataUrl}" alt="${sc.title}">
+    </article>
+  `).join('');
+}
+
 function getHistory(){
   try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
 }
@@ -368,7 +422,7 @@ function renderHistory(){
   arr.forEach((h, idx) => {
     const d = document.createElement('div');
     d.className = 'hist';
-    d.innerHTML = `<div><div><b>${h.sample || 'Uploaded SVG'}</b></div><div class="muted">${h.metal} · ${h.finish} · ${h.mount}</div><div class="muted">${new Date(h.ts).toLocaleString()}</div></div><button class="btn secondary" style="padding:5px 8px;font-size:.72rem">Reuse</button>`;
+    d.innerHTML = `<div><div><b>${h.sample || 'Uploaded SVG'}</b></div><div class="muted">${h.metal} · ${h.finish} · ${h.mount} · ${h.sceneCount||0} views</div><div class="muted">${new Date(h.ts).toLocaleString()}</div></div><button class="btn secondary" style="padding:5px 8px;font-size:.72rem">Reuse</button>`;
     d.querySelector('button').onclick = () => {
       document.getElementById('metal').value = h.metal;
       document.getElementById('finish').value = h.finish;
@@ -391,7 +445,7 @@ document.getElementById('svgFile').addEventListener('change', async (e)=>{
     currentSvgText = txt;
     renderSvgPreview(currentSvgText);
     currentSourcePngDataUrl = await svgToPngDataUrl(currentSvgText, 1200);
-    renderCompare();
+    generatedDataUrl = ''; generatedScenes = []; renderCompare(); renderSceneGallery();
     setStatus(`Loaded ${f.name}`, 'ok');
     renderSamples();
   } catch (err) {
@@ -431,34 +485,24 @@ async function generateMockup(){
       direction ? `Additional direction: ${direction}` : ''
     ].filter(Boolean).join(' ');
 
-    setStatus('Calling Nano Banana model…');
-    const r = await fetch(PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        task: 'image',
-        imageModel: 'gemini-3-pro-image-preview',
-        prompt: strictLock,
-        imageBase64,
-        imageMimeType: 'image/png'
-      })
-    });
+    generatedScenes = [];
+    for (let i = 0; i < scenePresets.length; i++) {
+      const sc = scenePresets[i];
+      setStatus(`Rendering scene ${i+1}/${scenePresets.length}: ${sc.title}…`);
+      const scenePrompt = [strictLock, `Scene directive: ${sc.prompt}`].join(' ');
+      const dataUrl = await callImageModel(imageBase64, scenePrompt);
+      generatedScenes.push({ key: sc.key, title: sc.title, dataUrl });
+      if (i === 0) {
+        generatedDataUrl = dataUrl;
+        compareSplit = 50;
+        renderCompare();
+      }
+      renderSceneGallery();
+    }
 
-    const txt = await r.text();
-    let j = {};
-    try { j = JSON.parse(txt); } catch {}
-    if(!r.ok) throw new Error(j.error || txt || `Request failed (${r.status})`);
-
-    const b64 = j.bytesBase64Encoded;
-    const mime = j.mimeType || 'image/png';
-    if(!b64) throw new Error('No image returned by model.');
-
-    generatedDataUrl = `data:${mime};base64,${b64}`;
-    compareSplit = 50;
-    renderCompare();
     dlBtn.disabled = false;
     saveRevBtn.disabled = false;
-    setStatus('Etched mockup generated.', 'ok');
+    setStatus(`Done. Generated ${generatedScenes.length} mockup views.`, 'ok');
   } catch(err) {
     console.error(err);
     setStatus(err.message || 'Generation failed', 'error');
@@ -476,12 +520,14 @@ function saveRevision(){
     finish: document.getElementById('finish').value,
     mount: document.getElementById('mount').value,
     lighting: document.getElementById('lighting').value,
-    direction: document.getElementById('direction').value.trim()
+    direction: document.getElementById('direction').value.trim(),
+    sceneCount: generatedScenes.length
   };
   const arr = getHistory();
   arr.unshift(entry);
   setHistory(arr);
   renderHistory();
+renderSceneGallery();
   setStatus('Revision snapshot saved.', 'ok');
 }
 
@@ -499,12 +545,14 @@ document.getElementById('download').addEventListener('click', ()=>{
 document.getElementById('clearHistory').addEventListener('click', ()=>{
   localStorage.removeItem(HISTORY_KEY);
   renderHistory();
+renderSceneGallery();
   setStatus('Revision history cleared.');
 });
 
 buildTabs();
 renderSamples();
 renderHistory();
+renderSceneGallery();
 </script>
 </body>
 </html>
