@@ -280,10 +280,21 @@ const historyList = document.getElementById('historyList');
 const sceneGalleryEl = document.getElementById('sceneGallery');
 
 const scenePresets = [
-  { key:'hero', title:'Hero Product Shot', prompt:'Centered product shot on neutral backdrop. Keep entire geometry visible and sharp. Premium architectural catalog style.' },
-  { key:'elevator', title:'Elevator Door Install', prompt:'Install this etched panel on brushed elevator doors in a luxury tower lobby, realistic scale, straight-on perspective.' },
-  { key:'wall', title:'Floor-to-Ceiling Wall Clad', prompt:'Show this pattern as large wall cladding from floor to ceiling in an upscale architectural interior, realistic scale and repetition.' },
-  { key:'scan2d', title:'2D Technical Scan', prompt:'Flat orthographic 2D scan-style presentation on white background with ultra-crisp etch visibility and no perspective distortion.' }
+  {
+    key:'scan2d',
+    title:'2D Technical Scan',
+    prompt:'Flat orthographic face-on scan view. Entire panel fully visible edge-to-edge, centered, no perspective distortion, white or neutral background.'
+  },
+  {
+    key:'elevator',
+    title:'Elevator Door Install (Vertical)',
+    prompt:'Vertical portrait composition. Close-up of elevator exterior with a clear vertical center seam where the two doors meet. Panel mounted realistically with true proportions and visible architectural context.'
+  },
+  {
+    key:'wall',
+    title:'Floor-to-Ceiling Wall Clad',
+    prompt:'Show this pattern as large wall cladding from floor to ceiling in an upscale architectural interior, realistic scale and repetition.'
+  }
 ];
 
 
@@ -492,7 +503,7 @@ async function generateMockup(){
       const scenePrompt = [strictLock, `Scene directive: ${sc.prompt}`].join(' ');
       const dataUrl = await callImageModel(imageBase64, scenePrompt);
       generatedScenes.push({ key: sc.key, title: sc.title, dataUrl });
-      if (i === 0) {
+      if (sc.key === 'scan2d') {
         generatedDataUrl = dataUrl;
         compareSplit = 50;
         renderCompare();
