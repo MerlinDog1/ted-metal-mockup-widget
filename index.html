@@ -91,22 +91,22 @@
     }
     .samples::-webkit-scrollbar { display:none; }
     .sample {
-      min-width:220px;
-      width:220px;
+      min-width:280px;
+      width:280px;
       border:1px solid #304865;
       border-radius:12px;
       background:#0e1a30;
       padding:8px;
       cursor:pointer;
       text-align:center;
-      font-size:.8rem;
+      font-size:.85rem;
       color:#dbe9ff;
       flex:0 0 auto;
       scroll-snap-align:start;
       transition:transform .18s ease, border-color .18s ease;
     }
     @media (max-width: 760px){
-      .sample { min-width:180px; width:180px; }
+      .sample { min-width:220px; width:220px; }
     }
     .sample:hover { transform:translateY(-2px); }
     .sample.active { border-color:#65d5ff; box-shadow:0 0 0 2px rgba(99,209,255,.15) inset; }
@@ -182,8 +182,10 @@
       position: absolute; top:0; bottom:0; width:2px; background: #78d8ff; left:50%; pointer-events:none;
       box-shadow: 0 0 0 1px rgba(255,255,255,.25);
     }
-    .sliderWrap { position:absolute; left:10px; right:10px; bottom:10px; }
-    .sliderWrap input { width:100%; }
+    .sliderWrap { position:absolute; left:10px; right:10px; bottom:10px; z-index:5; }
+    .sliderWrap input { width:100%; height:28px; }
+    .sliderWrap input::-webkit-slider-thumb { width:20px; height:20px; }
+
 
     .status { margin-top: 9px; font-size: .9rem; color: #a4d7ff; min-height: 24px; }
     .status.ok { color: var(--ok); }
@@ -531,16 +533,37 @@ function renderCompare(){
     return;
   }
   compareWrap.innerHTML = `
-    <div class="compare">
+    <div id="compareCanvas" class="compare">
       <div class="base"><img src="${currentSourcePngDataUrl}" alt="Source"></div>
       <div id="topLayer" class="top" style="clip-path: inset(0 ${100-compareSplit}% 0 0)"><img src="${generatedDataUrl}" alt="Etched"></div>
       <div id="divider" class="divider" style="left:${compareSplit}%"></div>
       <div class="sliderWrap"><input id="compareSlider" type="range" min="0" max="100" value="${compareSplit}" /></div>
     </div>`;
-  document.getElementById('compareSlider').addEventListener('input', (e)=>{
-    compareSplit = Number(e.target.value);
-    document.getElementById('topLayer').style.clipPath = `inset(0 ${100-compareSplit}% 0 0)`;
-    document.getElementById('divider').style.left = `${compareSplit}%`;
+
+  const slider = document.getElementById('compareSlider');
+  const topLayer = document.getElementById('topLayer');
+  const divider = document.getElementById('divider');
+  const canvas = document.getElementById('compareCanvas');
+
+  const applySplit = (v) => {
+    compareSplit = Math.max(0, Math.min(100, Number(v) || 0));
+    topLayer.style.clipPath = `inset(0 ${100-compareSplit}% 0 0)`;
+    divider.style.left = `${compareSplit}%`;
+    slider.value = String(compareSplit);
+  };
+
+  slider.addEventListener('input', (e)=> applySplit(e.target.value));
+  slider.addEventListener('change', (e)=> applySplit(e.target.value));
+
+  const setFromPointer = (clientX) => {
+    const rect = canvas.getBoundingClientRect();
+    const pct = ((clientX - rect.left) / rect.width) * 100;
+    applySplit(pct);
+  };
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.target === slider) return;
+    setFromPointer(e.clientX);
   });
 }
 
