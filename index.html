@@ -91,19 +91,22 @@
     }
     .samples::-webkit-scrollbar { display:none; }
     .sample {
-      min-width:108px;
-      width:108px;
+      min-width:220px;
+      width:220px;
       border:1px solid #304865;
       border-radius:12px;
       background:#0e1a30;
       padding:8px;
       cursor:pointer;
       text-align:center;
-      font-size:.72rem;
+      font-size:.8rem;
       color:#dbe9ff;
       flex:0 0 auto;
       scroll-snap-align:start;
       transition:transform .18s ease, border-color .18s ease;
+    }
+    @media (max-width: 760px){
+      .sample { min-width:180px; width:180px; }
     }
     .sample:hover { transform:translateY(-2px); }
     .sample.active { border-color:#65d5ff; box-shadow:0 0 0 2px rgba(99,209,255,.15) inset; }
@@ -449,7 +452,7 @@ const scenePresets = [
   }
 ];
 
-const mainPanelPrompt = 'Flat orthographic face-on scan view. Entire panel fully visible, centered, no perspective distortion, white/neutral background, clean technical product shot with minimal reflections.';
+const mainPanelPrompt = 'Flat orthographic face-on scan view of a square metal panel. Entire square panel fully visible, centered, no perspective distortion, white/neutral background, clean technical product shot with minimal reflections.';
 
 
 function setStatus(msg, type='info'){
