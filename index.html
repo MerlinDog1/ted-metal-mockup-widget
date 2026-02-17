@@ -51,6 +51,7 @@
       border-radius: 14px;
       background: linear-gradient(155deg, rgba(255,255,255,.02), rgba(255,255,255,.004));
       padding: 12px;
+      min-width: 0;
     }
 
     label { display:block; font-size:.74rem; color:var(--muted); margin-bottom:6px; letter-spacing:.03em; text-transform:uppercase; }
@@ -80,20 +81,25 @@
       display:flex;
       gap:10px;
       overflow-x:auto;
-      padding-bottom:4px;
+      max-width:100%;
+      padding:4px 2px 8px;
       scroll-snap-type:x mandatory;
-      scrollbar-width:thin;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+      mask-image: linear-gradient(to right, transparent 0, black 14px, black calc(100% - 14px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0, black 14px, black calc(100% - 14px), transparent 100%);
     }
+    .samples::-webkit-scrollbar { display:none; }
     .sample {
-      min-width:132px;
-      width:132px;
+      min-width:108px;
+      width:108px;
       border:1px solid #304865;
       border-radius:12px;
       background:#0e1a30;
       padding:8px;
       cursor:pointer;
       text-align:center;
-      font-size:.76rem;
+      font-size:.72rem;
       color:#dbe9ff;
       flex:0 0 auto;
       scroll-snap-align:start;
@@ -118,6 +124,10 @@
       border:1px solid #2f4563; border-radius:12px; background:#0c1425;
       min-height:520px; display:grid; place-items:center; overflow:hidden; position:relative;
     }
+    .preview.square-preview {
+      min-height: auto;
+      aspect-ratio: 1 / 1;
+    }
     .preview img, .preview svg { max-width:100%; max-height:840px; display:block; }
 
     .panel-head {
@@ -132,13 +142,13 @@
       border:1px solid #2f4563;
       border-radius:12px;
       background:#0c1425;
-      min-height:320px;
+      aspect-ratio: 1 / 1;
       display:grid;
       place-items:center;
       overflow:hidden;
       padding:10px;
     }
-    .top-source img, .top-source svg { max-width:100%; max-height:420px; display:block; object-fit:contain; }
+    .top-source img, .top-source svg { max-width:100%; max-height:100%; display:block; object-fit:contain; }
 
     .compare {
       position: relative;
@@ -201,19 +211,7 @@
 
     .scene-ph {
       min-height: 280px;
-      display:grid;
-      place-items:center;
-      color:#a8bbda;
-      background:
-        linear-gradient(110deg, rgba(255,255,255,.02) 8%, rgba(255,255,255,.08) 18%, rgba(255,255,255,.02) 33%),
-        #0b1322;
-      background-size: 240% 100%;
-      animation: shimmer 1.8s linear infinite;
-      font-size:.85rem;
-    }
-    @keyframes shimmer {
-      from { background-position: 130% 0; }
-      to { background-position: -130% 0; }
+      background:#0b1322;
     }
 
     .history { margin-top: 10px; border-top: 1px dashed #2f425f; padding-top: 10px; }
@@ -300,7 +298,7 @@
           <div class="hint" style="margin:0">2D Compare Scan</div>
           <button id="downloadMainPanelTop" class="btn secondary" disabled style="padding:6px 9px;font-size:.72rem">Download Main PNG</button>
         </div>
-        <div id="compareWrap" class="preview"><div class="muted">Generated etched output appears here</div></div>
+        <div id="compareWrap" class="preview square-preview"><div class="muted">Generated etched output appears here</div></div>
       </section>
 
       <section class="card">
@@ -507,6 +505,7 @@ function renderSamples(){
       d.innerHTML = `${s.svg}<div>${s.name}</div>`;
       d.onclick = async () => {
         selectedSampleName = s.name;
+        d.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         currentSvgText = s.svg;
         renderTopSource();
         currentSourcePngDataUrl = await svgToPngDataUrl(currentSvgText, 1200);
@@ -587,7 +586,7 @@ function renderSceneGallery(){
             <button class="btn secondary scene-dl" data-scene-key="${preset.key}" ${ready ? '' : 'disabled'}>Download</button>
           </div>
         </div>
-        ${ready ? `<img src="${sc.dataUrl}" alt="${preset.title}">` : `<div class="scene-ph">${isGenerating ? 'Building scene…' : 'Generate to build this scene'}</div>`}
+        ${ready ? `<img src="${sc.dataUrl}" alt="${preset.title}">` : `<div class="scene-ph"></div>`}
       </article>
     `;
   }).join('');
