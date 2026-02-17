@@ -74,20 +74,42 @@
     .btn.secondary { background: #17253a; border-color: #384b6a; color: #d6e6ff; }
     .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 
-    .tabs { display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
-    .tab {
-      border:1px solid #365077; background:#0f1930; color:#cde0ff;
-      border-radius:999px; padding:5px 10px; font-size:.75rem; cursor:pointer;
-    }
-    .tab.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(99,209,255,.2) inset; }
+    .tabs { display:none; }
 
-    .samples { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
-    .sample {
-      border:1px solid #304865; border-radius:10px; background:#0e1a30;
-      padding:8px; cursor:pointer; text-align:center; font-size:.78rem; color:#dbe9ff;
+    .samples {
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      padding-bottom:4px;
+      scroll-snap-type:x mandatory;
+      scrollbar-width:thin;
     }
+    .sample {
+      min-width:132px;
+      width:132px;
+      border:1px solid #304865;
+      border-radius:12px;
+      background:#0e1a30;
+      padding:8px;
+      cursor:pointer;
+      text-align:center;
+      font-size:.76rem;
+      color:#dbe9ff;
+      flex:0 0 auto;
+      scroll-snap-align:start;
+      transition:transform .18s ease, border-color .18s ease;
+    }
+    .sample:hover { transform:translateY(-2px); }
     .sample.active { border-color:#65d5ff; box-shadow:0 0 0 2px rgba(99,209,255,.15) inset; }
-    .sample svg { width:100%; height:72px; display:block; margin-bottom:5px; background:#fff; border-radius:6px; }
+    .sample svg {
+      width:100%;
+      aspect-ratio:1/1;
+      display:block;
+      margin-bottom:6px;
+      background:#fff;
+      border-radius:8px;
+      padding:4px;
+    }
 
     .previewWrap { display:grid; grid-template-columns: 1fr; gap: 12px; }
     .hint { color: var(--muted); font-size: .85rem; margin-bottom: 6px; }
@@ -225,8 +247,7 @@
           <input id="svgFile" type="file" accept=".svg,image/svg+xml" />
 
           <div style="height:10px"></div>
-          <label>Pattern library</label>
-          <div class="tabs" id="sampleTabs"></div>
+          <label>Pattern library (scroll sideways)</label>
           <div class="samples" id="samples"></div>
 
           <div style="height:10px"></div>
@@ -380,9 +401,7 @@ async function loadPatternLibrary(){
 
     if (curated.length) {
       sampleData = curated;
-      activeCategory = 'All';
       selectedSampleName = '';
-      buildTabs();
       renderSamples();
       setStatus(`Loaded ${curated.length} patterns from svg-pattern-generator.`, 'ok');
       return;
@@ -391,7 +410,6 @@ async function loadPatternLibrary(){
   } catch (err) {
     console.warn('Pattern library load failed, using fallback samples.', err);
     sampleData = [...fallbackSampleData];
-    buildTabs();
     renderSamples();
     setStatus('Using fallback pattern set (pattern library unavailable).', 'error');
   }
@@ -403,12 +421,10 @@ let currentSourcePngDataUrl = '';
 let generatedDataUrl = '';
 let generatedScenes = [];
 let isGenerating = false;
-let activeCategory = 'All';
 let selectedSampleName = '';
 let compareSplit = 50;
 
 const samplesEl = document.getElementById('samples');
-const tabsEl = document.getElementById('sampleTabs');
 const srcPreviewTop = document.getElementById('srcPreviewTop');
 const compareWrap = document.getElementById('compareWrap');
 const statusEl = document.getElementById('status');
@@ -425,17 +441,17 @@ const scenePresets = [
     key:'wall',
     cls:'wall',
     title:'Floor-to-Ceiling Wall Cladding (~30°)',
-    prompt:'Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Real fabrication scale, no stylization.'
+    prompt:'Strict 16:9 landscape composition. Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Scale panel art down slightly so full composition breathes with visible margins. Real fabrication scale, no stylization.'
   },
   {
     key:'elevator',
     cls:'portrait',
     title:'Elevator Door Install (9:16 Vertical)',
-    prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Show stainless door rails and realistic mounting scale. Keep panel art unchanged.'
+    prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Show stainless door rails and realistic mounting scale. Scale panel artwork down slightly within door area for cleaner framing. Keep panel art unchanged.'
   }
 ];
 
-const mainPanelPrompt = 'Flat orthographic face-on scan view. Entire panel fully visible edge-to-edge, centered, no perspective distortion, white/neutral background, clean technical product shot with minimal reflections.';
+const mainPanelPrompt = 'Flat orthographic face-on scan view. Entire panel fully visible, centered, no perspective distortion, white/neutral background, clean technical product shot with minimal reflections.';
 
 
 function setStatus(msg, type='info'){
@@ -445,21 +461,28 @@ function setStatus(msg, type='info'){
 
 function fileToText(file){ return file.text(); }
 
-function svgToPngDataUrl(svgText, outW=1600){
+function svgToPngDataUrl(svgText, outW=1600, outH=null, fitScale=1){
   return new Promise((resolve,reject)=>{
     const blob = new Blob([svgText], {type:'image/svg+xml;charset=utf-8'});
     const url = URL.createObjectURL(blob);
     const img = new Image();
     img.onload = () => {
-      const ratio = img.width && img.height ? (img.height / img.width) : 0.66;
+      const srcRatio = img.width && img.height ? (img.width / img.height) : 1;
       const w = outW;
-      const h = Math.max(440, Math.round(outW * ratio));
+      const h = outH || Math.max(440, Math.round(outW / srcRatio));
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#fff';
       ctx.fillRect(0,0,w,h);
-      ctx.drawImage(img, 0, 0, w, h);
+
+      const fit = Math.min(w / img.width, h / img.height) * fitScale;
+      const drawW = img.width * fit;
+      const drawH = img.height * fit;
+      const dx = (w - drawW) / 2;
+      const dy = (h - drawH) / 2;
+      ctx.drawImage(img, dx, dy, drawW, drawH);
+
       URL.revokeObjectURL(url);
       resolve(canvas.toDataURL('image/png'));
     };
@@ -476,23 +499,9 @@ function renderTopSource(){
   srcPreviewTop.innerHTML = currentSvgText;
 }
 
-function buildTabs(){
-  const cats = ['All', ...Array.from(new Set(sampleData.map(s => s.category)))];
-  tabsEl.innerHTML = '';
-  cats.forEach(cat => {
-    const b = document.createElement('button');
-    b.className = 'tab' + (cat===activeCategory ? ' active':'');
-    b.textContent = cat;
-    b.onclick = () => { activeCategory = cat; buildTabs(); renderSamples(); };
-    tabsEl.appendChild(b);
-  });
-}
-
 function renderSamples(){
   samplesEl.innerHTML = '';
-  sampleData
-    .filter(s => activeCategory === 'All' || s.category === activeCategory)
-    .forEach(s => {
+  sampleData.forEach(s => {
       const d = document.createElement('button');
       d.className = 'sample' + (selectedSampleName === s.name ? ' active':'');
       d.innerHTML = `${s.svg}<div>${s.name}</div>`;
@@ -655,10 +664,18 @@ async function generateMockup(){
   try {
     isGenerating = true;
     renderSceneGallery();
-    setStatus('Rasterizing source vector…');
-    const sourcePngDataUrl = await svgToPngDataUrl(currentSvgText, 1600);
-    const imageBase64 = sourcePngDataUrl.split(',')[1];
-    currentSourcePngDataUrl = sourcePngDataUrl;
+    setStatus('Rasterizing source vector variants…');
+    const sourceMainPng = await svgToPngDataUrl(currentSvgText, 1600, 1600, 0.96);   // 1:1 for compare
+    const sourceWallPng = await svgToPngDataUrl(currentSvgText, 1920, 1080, 0.9);     // 16:9, slightly scaled down
+    const sourceElevatorPng = await svgToPngDataUrl(currentSvgText, 1080, 1920, 0.9); // 9:16, slightly scaled down
+
+    currentSourcePngDataUrl = sourceMainPng;
+
+    const imageBase64ByScene = {
+      main: sourceMainPng.split(',')[1],
+      wall: sourceWallPng.split(',')[1],
+      elevator: sourceElevatorPng.split(',')[1]
+    };
 
     const strictLock = [
       'You are rendering a photoreal metal panel mockup from the provided monochrome vector mask.',
@@ -679,8 +696,8 @@ async function generateMockup(){
 
     generatedScenes = [];
 
-    setStatus('Rendering main panel…');
-    generatedDataUrl = await callImageModel(imageBase64, [strictLock, `Scene directive: ${mainPanelPrompt}`].join(' '));
+    setStatus('Rendering main panel (1:1 square)…');
+    generatedDataUrl = await callImageModel(imageBase64ByScene.main, [strictLock, `Scene directive: ${mainPanelPrompt} Strict aspect ratio: 1:1 square.`].join(' '));
     compareSplit = 50;
     renderCompare();
 
@@ -688,7 +705,8 @@ async function generateMockup(){
       const sc = scenePresets[i];
       setStatus(`Rendering context ${i+1}/${scenePresets.length}: ${sc.title}…`);
       const scenePrompt = [strictLock, `Scene directive: ${sc.prompt}`].join(' ');
-      const dataUrl = await callImageModel(imageBase64, scenePrompt);
+      const sceneBase64 = imageBase64ByScene[sc.key] || imageBase64ByScene.main;
+      const dataUrl = await callImageModel(sceneBase64, scenePrompt);
       generatedScenes.push({ key: sc.key, cls: sc.cls, title: sc.title, dataUrl });
       renderSceneGallery();
     }
@@ -761,7 +779,6 @@ renderSceneGallery();
   setStatus('Revision history cleared.');
 });
 
-buildTabs();
 renderSamples();
 loadPatternLibrary();
 renderTopSource();
