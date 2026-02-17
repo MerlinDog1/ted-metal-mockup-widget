@@ -41,8 +41,8 @@
     .pills { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
     .pill { border: 1px solid #35507a; background: #0f1a32; color: #c9dcff; border-radius: 999px; padding: 5px 10px; font-size: .78rem; }
 
-    .grid { margin-top: 14px; display: grid; grid-template-columns: 430px 1fr; gap: 14px; }
-    @media (max-width: 1020px){ .grid { grid-template-columns: 1fr; } }
+    .grid { margin-top: 14px; display: grid; grid-template-columns: 390px 1fr; gap: 14px; align-items:start; }
+    @media (max-width: 1120px){ .grid { grid-template-columns: 1fr; } }
 
     .card {
       border: 1px solid var(--line);
@@ -92,9 +92,9 @@
 
     .preview {
       border:1px solid #2f4563; border-radius:12px; background:#0c1425;
-      min-height:420px; display:grid; place-items:center; overflow:hidden; position:relative;
+      min-height:520px; display:grid; place-items:center; overflow:hidden; position:relative;
     }
-    .preview img, .preview svg { max-width:100%; max-height:720px; display:block; }
+    .preview img, .preview svg { max-width:100%; max-height:840px; display:block; }
 
     .panel-head {
       display:flex;
@@ -151,6 +151,23 @@
     }
     .scene-card.portrait img { max-height:700px; }
     .scene-card.wall img { max-height:520px; }
+
+    .scene-ph {
+      min-height: 280px;
+      display:grid;
+      place-items:center;
+      color:#a8bbda;
+      background:
+        linear-gradient(110deg, rgba(255,255,255,.02) 8%, rgba(255,255,255,.08) 18%, rgba(255,255,255,.02) 33%),
+        #0b1322;
+      background-size: 240% 100%;
+      animation: shimmer 1.8s linear infinite;
+      font-size:.85rem;
+    }
+    @keyframes shimmer {
+      from { background-position: 130% 0; }
+      to { background-position: -130% 0; }
+    }
 
     .history { margin-top: 10px; border-top: 1px dashed #2f425f; padding-top: 10px; }
     .history h4 { margin:0 0 8px; font-size:.88rem; color:#cde3ff; }
@@ -271,6 +288,7 @@ let currentSvgText = '';
 let currentSourcePngDataUrl = '';
 let generatedDataUrl = '';
 let generatedScenes = [];
+let isGenerating = false;
 let activeCategory = 'All';
 let selectedSampleName = '';
 let compareSplit = 50;
@@ -424,27 +442,29 @@ function downloadDataUrl(dataUrl, filename){
 }
 
 function renderSceneGallery(){
-  if(!generatedScenes.length){
-    sceneGalleryEl.innerHTML = '<div class="muted">Generate to see mockups in different installed contexts.</div>';
-    return;
-  }
-  sceneGalleryEl.innerHTML = generatedScenes.map((sc, i) => `
-    <article class="scene-card ${sc.cls||''}">
-      <div class="scene-head">
-        <b>${sc.title}</b>
-        <div class="scene-actions">
-          <span class="muted">view ${i+1}</span>
-          <button class="btn secondary scene-dl" data-scene-index="${i}">Download</button>
+  const html = scenePresets.map((preset, i) => {
+    const sc = generatedScenes.find(x => x.key === preset.key);
+    const ready = !!sc?.dataUrl;
+    return `
+      <article class="scene-card ${preset.cls||''}">
+        <div class="scene-head">
+          <b>${preset.title}</b>
+          <div class="scene-actions">
+            <span class="muted">view ${i+2}</span>
+            <button class="btn secondary scene-dl" data-scene-key="${preset.key}" ${ready ? '' : 'disabled'}>Download</button>
+          </div>
         </div>
-      </div>
-      <img src="${sc.dataUrl}" alt="${sc.title}">
-    </article>
-  `).join('');
+        ${ready ? `<img src="${sc.dataUrl}" alt="${preset.title}">` : `<div class="scene-ph">${isGenerating ? 'Building scene…' : 'Generate to build this scene'}</div>`}
+      </article>
+    `;
+  }).join('');
 
-  sceneGalleryEl.querySelectorAll('[data-scene-index]').forEach(btn => {
+  sceneGalleryEl.innerHTML = html;
+
+  sceneGalleryEl.querySelectorAll('[data-scene-key]').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const idx = Number(e.currentTarget.getAttribute('data-scene-index'));
-      const sc = generatedScenes[idx];
+      const key = e.currentTarget.getAttribute('data-scene-key');
+      const sc = generatedScenes.find(x => x.key === key);
       if(!sc) return;
       const safeName = sc.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       downloadDataUrl(sc.dataUrl, `tcm-${safeName}-${Date.now()}.png`);
@@ -508,6 +528,8 @@ async function generateMockup(){
   saveRevBtn.disabled = true;
 
   try {
+    isGenerating = true;
+    renderSceneGallery();
     setStatus('Rasterizing source vector…');
     const sourcePngDataUrl = await svgToPngDataUrl(currentSvgText, 1600);
     const imageBase64 = sourcePngDataUrl.split(',')[1];
@@ -555,6 +577,8 @@ async function generateMockup(){
     console.error(err);
     setStatus(err.message || 'Generation failed', 'error');
   } finally {
+    isGenerating = false;
+    renderSceneGallery();
     goBtn.disabled = false;
   }
 }
