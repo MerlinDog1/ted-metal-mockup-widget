@@ -346,15 +346,32 @@ function normalizeCategory(tags){
 }
 
 async function loadPatternLibrary(){
-  const endpoints = [
+  const localEndpoint = './data/pattern-library.json';
+  const remoteEndpoints = [
     'https://cdn.jsdelivr.net/gh/MerlinDog1/svg-pattern-generator@main/public/svelte_patterns.json',
     'https://cdn.jsdelivr.net/gh/MerlinDog1/svg-pattern-generator@main/public/pattern_monster_patterns.json'
   ];
 
   try {
     setStatus('Loading SVG pattern library…');
-    const results = await Promise.all(endpoints.map(url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('fetch failed')))));
-    const combined = results.flatMap(r => Array.isArray(r.patterns) ? r.patterns : []);
+
+    let combined = [];
+
+    // 1) Prefer local bundled library (works on GitHub Pages reliably)
+    try {
+      const localResp = await fetch(localEndpoint);
+      if (localResp.ok) {
+        const localJson = await localResp.json();
+        combined = Array.isArray(localJson.patterns) ? localJson.patterns : [];
+      }
+    } catch {}
+
+    // 2) If local is empty, fallback to remote source repo
+    if (!combined.length) {
+      const results = await Promise.all(remoteEndpoints.map(url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('fetch failed')))));
+      combined = results.flatMap(r => Array.isArray(r.patterns) ? r.patterns : []);
+    }
+
     const curated = combined.slice(0, 180).map((p, idx) => ({
       category: normalizeCategory(p.tags),
       name: p.name || ('Pattern ' + (idx + 1)),
@@ -370,13 +387,13 @@ async function loadPatternLibrary(){
       setStatus(`Loaded ${curated.length} patterns from svg-pattern-generator.`, 'ok');
       return;
     }
-    throw new Error('No patterns found in remote library');
+    throw new Error('No patterns found in pattern library');
   } catch (err) {
     console.warn('Pattern library load failed, using fallback samples.', err);
     sampleData = [...fallbackSampleData];
     buildTabs();
     renderSamples();
-    setStatus('Using fallback pattern set (remote library unavailable).', 'error');
+    setStatus('Using fallback pattern set (pattern library unavailable).', 'error');
   }
 }
 
