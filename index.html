@@ -92,9 +92,17 @@
 
     .preview {
       border:1px solid #2f4563; border-radius:12px; background:#0c1425;
-      min-height:360px; display:grid; place-items:center; overflow:hidden; position:relative;
+      min-height:420px; display:grid; place-items:center; overflow:hidden; position:relative;
     }
-    .preview img, .preview svg { max-width:100%; max-height:580px; display:block; }
+    .preview img, .preview svg { max-width:100%; max-height:720px; display:block; }
+
+    .panel-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
 
     .compare {
       position: relative;
@@ -228,15 +236,14 @@
       <section class="card">
         <div class="previewWrap">
           <div>
-            <div class="hint">Source vector</div>
-            <div id="srcPreview" class="preview"><div class="muted">Upload SVG or choose from library</div></div>
-          </div>
-          <div>
-            <div class="hint">Before/After compare</div>
+            <div class="panel-head">
+              <div class="hint" style="margin:0">Master Panel (2D scan + compare)</div>
+              <button id="downloadMainPanelTop" class="btn secondary" disabled style="padding:6px 9px;font-size:.72rem">Download Main PNG</button>
+            </div>
             <div id="compareWrap" class="preview"><div class="muted">Generated etched output appears here</div></div>
           </div>
         </div>
-        <div style="margin-top:10px" class="hint">Context mockups (multi-scene render)</div>
+        <div style="margin-top:10px" class="hint">Installed context mockups</div>
         <div id="sceneGallery" class="scene-grid"></div>
       </section>
     </div>
@@ -270,23 +277,17 @@ let compareSplit = 50;
 
 const samplesEl = document.getElementById('samples');
 const tabsEl = document.getElementById('sampleTabs');
-const srcPreview = document.getElementById('srcPreview');
 const compareWrap = document.getElementById('compareWrap');
 const statusEl = document.getElementById('status');
 const goBtn = document.getElementById('go');
 const dlBtn = document.getElementById('download');
+const dlMainTopBtn = document.getElementById('downloadMainPanelTop');
 const dlAllBtn = document.getElementById('downloadAll');
 const saveRevBtn = document.getElementById('saveRev');
 const historyList = document.getElementById('historyList');
 const sceneGalleryEl = document.getElementById('sceneGallery');
 
 const scenePresets = [
-  {
-    key:'scan2d',
-    cls:'scan',
-    title:'2D Technical Scan',
-    prompt:'Flat orthographic face-on scan view. Entire panel fully visible edge-to-edge, centered, no perspective distortion, white/neutral background, clean technical product shot with minimal reflections.'
-  },
   {
     key:'elevator',
     cls:'portrait',
@@ -300,6 +301,8 @@ const scenePresets = [
     prompt:'Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Real fabrication scale, no stylization.'
   }
 ];
+
+const mainPanelPrompt = 'Flat orthographic face-on scan view. Entire panel fully visible edge-to-edge, centered, no perspective distortion, white/neutral background, clean technical product shot with minimal reflections.';
 
 
 function setStatus(msg, type='info'){
@@ -332,8 +335,6 @@ function svgToPngDataUrl(svgText, outW=1600){
   });
 }
 
-function renderSvgPreview(svgText){ srcPreview.innerHTML = svgText; }
-
 function buildTabs(){
   const cats = ['All', ...Array.from(new Set(sampleData.map(s => s.category)))];
   tabsEl.innerHTML = '';
@@ -357,10 +358,9 @@ function renderSamples(){
       d.onclick = async () => {
         selectedSampleName = s.name;
         currentSvgText = s.svg;
-        renderSvgPreview(currentSvgText);
         currentSourcePngDataUrl = await svgToPngDataUrl(currentSvgText, 1200);
         generatedDataUrl = ''; generatedScenes = []; renderCompare(); renderSceneGallery();
-        dlBtn.disabled = true; dlAllBtn.disabled = true; saveRevBtn.disabled = true;
+        dlBtn.disabled = true; dlMainTopBtn.disabled = true; dlAllBtn.disabled = true; saveRevBtn.disabled = true;
         setStatus(`Loaded sample: ${s.name}`, 'ok');
         renderSamples();
       };
@@ -483,10 +483,9 @@ document.getElementById('svgFile').addEventListener('change', async (e)=>{
     if(!txt.includes('<svg')) throw new Error('File does not appear to be valid SVG.');
     selectedSampleName = '';
     currentSvgText = txt;
-    renderSvgPreview(currentSvgText);
     currentSourcePngDataUrl = await svgToPngDataUrl(currentSvgText, 1200);
     generatedDataUrl = ''; generatedScenes = []; renderCompare(); renderSceneGallery();
-    dlBtn.disabled = true; dlAllBtn.disabled = true; saveRevBtn.disabled = true;
+    dlBtn.disabled = true; dlMainTopBtn.disabled = true; dlAllBtn.disabled = true; saveRevBtn.disabled = true;
     setStatus(`Loaded ${f.name}`, 'ok');
     renderSamples();
   } catch (err) {
@@ -504,6 +503,7 @@ async function generateMockup(){
 
   goBtn.disabled = true;
   dlBtn.disabled = true;
+  dlMainTopBtn.disabled = true;
   dlAllBtn.disabled = true;
   saveRevBtn.disabled = true;
 
@@ -531,24 +531,26 @@ async function generateMockup(){
     ].filter(Boolean).join(' ');
 
     generatedScenes = [];
+
+    setStatus('Rendering main panel…');
+    generatedDataUrl = await callImageModel(imageBase64, [strictLock, `Scene directive: ${mainPanelPrompt}`].join(' '));
+    compareSplit = 50;
+    renderCompare();
+
     for (let i = 0; i < scenePresets.length; i++) {
       const sc = scenePresets[i];
-      setStatus(`Rendering scene ${i+1}/${scenePresets.length}: ${sc.title}…`);
+      setStatus(`Rendering context ${i+1}/${scenePresets.length}: ${sc.title}…`);
       const scenePrompt = [strictLock, `Scene directive: ${sc.prompt}`].join(' ');
       const dataUrl = await callImageModel(imageBase64, scenePrompt);
       generatedScenes.push({ key: sc.key, cls: sc.cls, title: sc.title, dataUrl });
-      if (sc.key === 'scan2d') {
-        generatedDataUrl = dataUrl;
-        compareSplit = 50;
-        renderCompare();
-      }
       renderSceneGallery();
     }
 
     dlBtn.disabled = false;
+    dlMainTopBtn.disabled = false;
     dlAllBtn.disabled = false;
     saveRevBtn.disabled = false;
-    setStatus(`Done. Generated ${generatedScenes.length} mockup views.`, 'ok');
+    setStatus(`Done. Built 3 views (main + ${generatedScenes.length} installed contexts).`, 'ok');
   } catch(err) {
     console.error(err);
     setStatus(err.message || 'Generation failed', 'error');
@@ -583,15 +585,25 @@ document.getElementById('download').addEventListener('click', ()=>{
   downloadDataUrl(generatedDataUrl, `tcm-etched-mockup-main-${Date.now()}.png`);
 });
 
+document.getElementById('downloadMainPanelTop').addEventListener('click', ()=>{
+  if(!generatedDataUrl) return;
+  downloadDataUrl(generatedDataUrl, `tcm-etched-mockup-main-${Date.now()}.png`);
+});
+
 document.getElementById('downloadAll').addEventListener('click', async ()=>{
-  if(!generatedScenes.length) return;
+  if(!generatedDataUrl && !generatedScenes.length) return;
+  const ts = Date.now();
+  if (generatedDataUrl) {
+    downloadDataUrl(generatedDataUrl, `tcm-01-main-panel-${ts}.png`);
+    await new Promise(r => setTimeout(r, 180));
+  }
   for (let i = 0; i < generatedScenes.length; i++) {
     const sc = generatedScenes[i];
     const safeName = sc.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    downloadDataUrl(sc.dataUrl, `tcm-${String(i+1).padStart(2,'0')}-${safeName}-${Date.now()}.png`);
+    downloadDataUrl(sc.dataUrl, `tcm-${String(i+2).padStart(2,'0')}-${safeName}-${ts}.png`);
     await new Promise(r => setTimeout(r, 180));
   }
-  setStatus(`Started downloading ${generatedScenes.length} PNG files.`, 'ok');
+  setStatus(`Started downloading ${generatedScenes.length + (generatedDataUrl ? 1 : 0)} PNG files.`, 'ok');
 });
 document.getElementById('clearHistory').addEventListener('click', ()=>{
   localStorage.removeItem(HISTORY_KEY);
