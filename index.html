@@ -301,19 +301,85 @@
 const PROXY_URL = 'https://wbtpizrlayiedgwrtpwl.functions.supabase.co/gemini-proxy';
 const HISTORY_KEY = 'tcm_mockup_history_v2';
 
-const sampleData = [
+const fallbackSampleData = [
   { category:'Geometric', name:'Deco Arches', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g fill='none' stroke='black' stroke-width='8'><path d='M40 340H560'/><path d='M80 340V120a220 220 0 0 1 440 0v220'/><path d='M160 340V150a140 140 0 0 1 280 0v190'/><path d='M240 340V180a60 60 0 0 1 120 0v160'/></g></svg>`},
-  { category:'Geometric', name:'Rosette', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g transform='translate(300 190)' fill='none' stroke='black' stroke-width='5'>${Array.from({length:24},(_,i)=>`<ellipse rx='24' ry='120' transform='rotate(${i*15})'/>`).join('')}<circle r='132'/><circle r='42'/></g></svg>`},
-  { category:'Geometric', name:'Facet Grid', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g stroke='black' stroke-width='3' fill='none'>${Array.from({length:10},(_,r)=>Array.from({length:14},(_,c)=>`<polygon points='${c*45+5},${r*36+8} ${c*45+38},${r*36+8} ${c*45+44},${r*36+28} ${c*45+11},${r*36+28}'/>`).join('')).join('')}</g></svg>`},
-
   { category:'Organic', name:'Wave Mesh', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g fill='none' stroke='black' stroke-width='4'>${Array.from({length:13},(_,i)=>`<path d='M0 ${30+i*24} C120 ${i%2?10:50},240 ${i%2?50:10},360 ${30+i*24} S520 ${i%2?10:50},600 ${30+i*24}'/>`).join('')}</g></svg>`},
-  { category:'Organic', name:'Topographic', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g fill='none' stroke='black' stroke-width='2'>${Array.from({length:26},(_,i)=>`<path d='M0 ${20+i*13} Q 120 ${10+i*13} 240 ${20+i*13} T 480 ${20+i*13} T 600 ${20+i*13}'/>`).join('')}</g></svg>`},
-  { category:'Organic', name:'Leaf Veins', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g fill='none' stroke='black' stroke-width='3'><path d='M50 320 C200 40,400 40,550 320'/><path d='M300 320 L300 95'/>${Array.from({length:11},(_,i)=>`<path d='M300 ${300-i*18} C ${245-i*8} ${280-i*18}, ${210-i*15} ${250-i*20}, ${170-i*22} ${225-i*22}'/><path d='M300 ${300-i*18} C ${355+i*8} ${280-i*18}, ${390+i*15} ${250-i*20}, ${430+i*22} ${225-i*22}'/>`).join('')}</g></svg>`},
-
-  { category:'Wayfinding', name:'North Star', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g stroke='black' fill='none' stroke-width='6' transform='translate(300 190)'><polygon points='0,-145 20,-20 145,0 20,20 0,145 -20,20 -145,0 -20,-20'/><circle r='72'/></g><text x='300' y='352' text-anchor='middle' fill='black' font-size='42' font-family='serif'>NORTH</text></svg>`},
-  { category:'Wayfinding', name:'Campus Rings', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g fill='none' stroke='black' stroke-width='5' transform='translate(300 190)'><circle r='145'/><circle r='112'/><circle r='80'/><circle r='48'/><path d='M-145 0H145M0-145V145'/></g></svg>`},
-  { category:'Wayfinding', name:'Braided Bar', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g fill='none' stroke='black' stroke-width='7'>${Array.from({length:8},(_,i)=>`<path d='M30 ${40+i*40} C180 ${10+i*40}, 420 ${70+i*40}, 570 ${40+i*40}'/>`).join('')}</g></svg>`}
+  { category:'Wayfinding', name:'North Star', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g stroke='black' fill='none' stroke-width='6' transform='translate(300 190)'><polygon points='0,-145 20,-20 145,0 20,20 0,145 -20,20 -145,0 -20,-20'/><circle r='72'/></g><text x='300' y='352' text-anchor='middle' fill='black' font-size='42' font-family='serif'>NORTH</text></svg>`}
 ];
+
+let sampleData = [...fallbackSampleData];
+
+function patternToTiledSvg(pattern, outW = 600, outH = 380){
+  const tileW = Math.max(8, Number(pattern.width) || 40);
+  const tileH = Math.max(8, Number(pattern.height) || 40);
+  const cols = Math.ceil(outW / tileW) + 1;
+  const rows = Math.ceil(outH / tileH) + 1;
+  let tileContent = (pattern.svgPath || '').replace(/\n/g, ' ');
+
+  if ((pattern.mode === 'stroke' || pattern.mode === 'stroke-join')) {
+    tileContent = tileContent
+      .replace(/stroke="[^"]*"/g, 'stroke="black"')
+      .replace(/stroke='[^']*'/g, "stroke='black'")
+      .replace(/fill="[^"]*"/g, 'fill="none"')
+      .replace(/fill='[^']*'/g, "fill='none'");
+    if (!/stroke=/.test(tileContent)) tileContent = tileContent.replace(/<path /g, '<path stroke="black" fill="none" ');
+  } else {
+    tileContent = tileContent
+      .replace(/fill="[^"]*"/g, 'fill="black"')
+      .replace(/fill='[^']*'/g, "fill='black'");
+    if (!/fill=/.test(tileContent)) tileContent = tileContent.replace(/<path /g, '<path fill="black" stroke="none" ');
+  }
+
+  const groups = [];
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      groups.push(`<g transform="translate(${c*tileW},${r*tileH})">${tileContent}</g>`);
+    }
+  }
+
+  return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${outW} ${outH}'><rect width='${outW}' height='${outH}' fill='white'/>${groups.join('')}</svg>`;
+}
+
+function normalizeCategory(tags){
+  const raw = Array.isArray(tags) && tags.length ? String(tags[0]) : 'Pattern';
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+async function loadPatternLibrary(){
+  const endpoints = [
+    'https://cdn.jsdelivr.net/gh/MerlinDog1/svg-pattern-generator@main/public/svelte_patterns.json',
+    'https://cdn.jsdelivr.net/gh/MerlinDog1/svg-pattern-generator@main/public/pattern_monster_patterns.json'
+  ];
+
+  try {
+    setStatus('Loading SVG pattern library…');
+    const results = await Promise.all(endpoints.map(url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('fetch failed')))));
+    const combined = results.flatMap(r => Array.isArray(r.patterns) ? r.patterns : []);
+    const curated = combined.slice(0, 180).map((p, idx) => ({
+      category: normalizeCategory(p.tags),
+      name: p.name || ('Pattern ' + (idx + 1)),
+      svg: patternToTiledSvg(p)
+    }));
+
+    if (curated.length) {
+      sampleData = curated;
+      activeCategory = 'All';
+      selectedSampleName = '';
+      buildTabs();
+      renderSamples();
+      setStatus(`Loaded ${curated.length} patterns from svg-pattern-generator.`, 'ok');
+      return;
+    }
+    throw new Error('No patterns found in remote library');
+  } catch (err) {
+    console.warn('Pattern library load failed, using fallback samples.', err);
+    sampleData = [...fallbackSampleData];
+    buildTabs();
+    renderSamples();
+    setStatus('Using fallback pattern set (remote library unavailable).', 'error');
+  }
+}
+
 
 let currentSvgText = '';
 let currentSourcePngDataUrl = '';
@@ -680,6 +746,7 @@ renderSceneGallery();
 
 buildTabs();
 renderSamples();
+loadPatternLibrary();
 renderTopSource();
 renderHistory();
 renderSceneGallery();
