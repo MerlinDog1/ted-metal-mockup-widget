@@ -93,15 +93,15 @@
     }
     .samples::-webkit-scrollbar { display:none; }
     .sample {
-      min-width:280px;
-      width:280px;
+      min-width:320px;
+      width:320px;
       border:1px solid #304865;
       border-radius:14px;
       background:linear-gradient(180deg, #0f1d36, #0d1830);
       padding:9px;
       cursor:pointer;
       text-align:center;
-      font-size:.85rem;
+      font-size:.88rem;
       color:#dbe9ff;
       flex:0 0 auto;
       scroll-snap-align:center;
@@ -111,18 +111,18 @@
       box-shadow:0 8px 24px rgba(0,0,0,.22);
     }
     @media (max-width: 760px){
-      .samples { padding:8px calc(50% - 110px) 10px; }
-      .sample { min-width:220px; width:220px; }
+      .samples { padding:8px calc(50% - 125px) 10px; }
+      .sample { min-width:250px; width:250px; }
     }
     .sample:hover { transform:scale(.95) translateY(-1px); }
     .sample.active {
       border-color:#65d5ff;
-      box-shadow:0 0 0 2px rgba(99,209,255,.18) inset, 0 14px 34px rgba(0,0,0,.34);
-      transform:scale(1);
+      box-shadow:0 0 0 2px rgba(99,209,255,.22) inset, 0 18px 40px rgba(0,0,0,.38);
+      transform:scale(1.04);
       opacity:1;
     }
-    .sample.near { transform:scale(.965); opacity:.9; }
-    .sample.far { transform:scale(.9); opacity:.58; }
+    .sample.near { transform:scale(1); opacity:.94; }
+    .sample.far { transform:scale(.9); opacity:.56; }
     .sample svg {
       width:100%;
       aspect-ratio:1/1;
@@ -130,7 +130,7 @@
       margin-bottom:6px;
       background:#fff;
       border-radius:8px;
-      padding:4px;
+      padding:0;
     }
 
     .previewWrap { display:grid; grid-template-columns: 1fr; gap: 12px; }
@@ -359,7 +359,7 @@ const fallbackSampleData = [
 
 let sampleData = [...fallbackSampleData];
 
-function patternToTiledSvg(pattern, outW = 600, outH = 380){
+function patternToTiledSvg(pattern, outW = 600, outH = 600){
   const tileW = Math.max(8, Number(pattern.width) || 40);
   const tileH = Math.max(8, Number(pattern.height) || 40);
   const cols = Math.ceil(outW / tileW) + 1;
@@ -589,7 +589,6 @@ function renderCompare(){
   const slider = document.getElementById('compareSlider');
   const topLayer = document.getElementById('topLayer');
   const divider = document.getElementById('divider');
-  const canvas = document.getElementById('compareCanvas');
 
   const applySplit = (v) => {
     compareSplit = Math.max(0, Math.min(100, Number(v) || 0));
@@ -600,17 +599,6 @@ function renderCompare(){
 
   slider.addEventListener('input', (e)=> applySplit(e.target.value));
   slider.addEventListener('change', (e)=> applySplit(e.target.value));
-
-  const setFromPointer = (clientX) => {
-    const rect = canvas.getBoundingClientRect();
-    const pct = ((clientX - rect.left) / rect.width) * 100;
-    applySplit(pct);
-  };
-
-  canvas.addEventListener('pointerdown', (e) => {
-    if (e.target === slider) return;
-    setFromPointer(e.clientX);
-  });
 }
 
 
