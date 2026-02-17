@@ -197,18 +197,52 @@
       box-shadow: 0 0 0 1px rgba(255,255,255,.25);
     }
     .sliderWrap {
-      margin-top:10px;
-      padding:8px 10px;
+      position:absolute;
+      left:14px;
+      right:14px;
+      bottom:12px;
+      z-index:8;
+      padding:6px 8px;
       border:1px solid #304763;
       border-radius:10px;
-      background:#101a2f;
+      background:rgba(16,26,47,.82);
+      backdrop-filter: blur(2px);
     }
     .sliderWrap input {
+      -webkit-appearance:none;
+      appearance:none;
       width:100%;
-      height:28px;
-      accent-color:#63d1ff;
+      height:22px;
+      background:transparent;
     }
-    .sliderWrap input::-webkit-slider-thumb { width:20px; height:20px; }
+    .sliderWrap input::-webkit-slider-runnable-track {
+      height:6px;
+      background:#294567;
+      border-radius:999px;
+    }
+    .sliderWrap input::-webkit-slider-thumb {
+      -webkit-appearance:none;
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:#63d1ff;
+      border:2px solid #d9f5ff;
+      margin-top:-7px;
+      box-shadow:0 0 0 3px rgba(99,209,255,.22);
+    }
+    .sliderWrap input::-moz-range-track {
+      height:6px;
+      background:#294567;
+      border-radius:999px;
+    }
+    .sliderWrap input::-moz-range-thumb {
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:#63d1ff;
+      border:2px solid #d9f5ff;
+      box-shadow:0 0 0 3px rgba(99,209,255,.22);
+    }
 
 
     .status { margin-top: 9px; font-size: .9rem; color: #a4d7ff; min-height: 24px; }
@@ -582,8 +616,8 @@ function renderCompare(){
         <div class="base"><img src="${currentSourcePngDataUrl}" alt="Source"></div>
         <div id="topLayer" class="top" style="clip-path: inset(0 ${100-compareSplit}% 0 0)"><img src="${generatedDataUrl}" alt="Etched"></div>
         <div id="divider" class="divider" style="left:${compareSplit}%"></div>
+        <div class="sliderWrap"><input id="compareSlider" type="range" min="0" max="100" value="${compareSplit}" /></div>
       </div>
-      <div class="sliderWrap"><input id="compareSlider" type="range" min="0" max="100" value="${compareSplit}" /></div>
     </div>`;
 
   const slider = document.getElementById('compareSlider');
