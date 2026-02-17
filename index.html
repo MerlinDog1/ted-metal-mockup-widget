@@ -41,8 +41,10 @@
     .pills { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
     .pill { border: 1px solid #35507a; background: #0f1a32; color: #c9dcff; border-radius: 999px; padding: 5px 10px; font-size: .78rem; }
 
-    .grid { margin-top: 14px; display: grid; grid-template-columns: 390px 1fr; gap: 14px; align-items:start; }
-    @media (max-width: 1120px){ .grid { grid-template-columns: 1fr; } }
+    .layout { margin-top: 14px; display:grid; gap:14px; }
+
+    .controls-grid { display:grid; grid-template-columns: 440px 1fr; gap:14px; align-items:stretch; }
+    @media (max-width: 1120px){ .controls-grid { grid-template-columns: 1fr; } }
 
     .card {
       border: 1px solid var(--line);
@@ -104,6 +106,18 @@
       margin-bottom:8px;
     }
 
+    .top-source {
+      border:1px solid #2f4563;
+      border-radius:12px;
+      background:#0c1425;
+      min-height:320px;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      padding:10px;
+    }
+    .top-source img, .top-source svg { max-width:100%; max-height:420px; display:block; object-fit:contain; }
+
     .compare {
       position: relative;
       width: 100%;
@@ -135,8 +149,14 @@
     .status.ok { color: var(--ok); }
     .status.error { color: var(--err); }
 
-    .scene-grid { margin-top: 12px; display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
-    @media (max-width: 760px){ .scene-grid { grid-template-columns: 1fr; } }
+    .scene-grid {
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: 1.7fr 1fr;
+      gap:12px;
+      align-items:start;
+    }
+    @media (max-width: 900px){ .scene-grid { grid-template-columns: 1fr; } }
     .scene-card { border:1px solid #304763; border-radius:12px; background:#0f1a30; overflow:hidden; }
     .scene-head { display:flex; justify-content:space-between; gap:8px; padding:8px 10px; font-size:.78rem; color:#cde1ff; border-bottom:1px solid #2e425f; align-items:center; }
     .scene-actions { display:flex; gap:6px; }
@@ -193,75 +213,81 @@
       </div>
     </section>
 
-    <div class="grid">
+    <div class="layout">
+      <div class="controls-grid">
+        <section class="card">
+          <label>Upload SVG</label>
+          <input id="svgFile" type="file" accept=".svg,image/svg+xml" />
+
+          <div style="height:10px"></div>
+          <label>Pattern library</label>
+          <div class="tabs" id="sampleTabs"></div>
+          <div class="samples" id="samples"></div>
+
+          <div style="height:10px"></div>
+          <div class="row">
+            <div>
+              <label>Metal</label>
+              <select id="metal">
+                <option value="brass">Brass</option>
+                <option value="stainless">Stainless steel</option>
+              </select>
+            </div>
+            <div>
+              <label>Finish</label>
+              <select id="finish">
+                <option value="brushed">Brushed</option>
+                <option value="polished">Polished</option>
+                <option value="aged">Aged patina</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="height:10px"></div>
+          <label>Lighting scene</label>
+          <select id="lighting">
+            <option value="studio">Studio product shot</option>
+            <option value="lobby">Architectural lobby</option>
+            <option value="daylight">Soft daylight wall</option>
+          </select>
+
+          <div style="height:10px"></div>
+          <label>Direction (optional)</label>
+          <textarea id="direction" placeholder="Example: Keep satin brass, crisp black enamel grooves, slight angle, premium reflections."></textarea>
+
+          <div style="height:12px"></div>
+          <button id="go" class="btn">Generate Etched Mockup</button>
+          <button id="download" class="btn secondary" disabled style="margin-top:8px">Download Main Mockup PNG</button>
+          <button id="downloadAll" class="btn secondary" disabled style="margin-top:8px">Download All Scene PNGs</button>
+          <button id="saveRev" class="btn secondary" disabled style="margin-top:8px">Save Revision Snapshot</button>
+          <div id="status" class="status"></div>
+        </section>
+
+        <section class="card">
+          <div class="hint">Source vector preview</div>
+          <div id="srcPreviewTop" class="top-source"><div class="muted">Upload SVG or choose from library</div></div>
+        </section>
+      </div>
+
       <section class="card">
-        <label>Upload SVG</label>
-        <input id="svgFile" type="file" accept=".svg,image/svg+xml" />
-
-        <div style="height:10px"></div>
-        <label>Pattern library</label>
-        <div class="tabs" id="sampleTabs"></div>
-        <div class="samples" id="samples"></div>
-
-        <div style="height:10px"></div>
-        <div class="row">
-          <div>
-            <label>Metal</label>
-            <select id="metal">
-              <option value="brass">Brass</option>
-              <option value="stainless">Stainless steel</option>
-            </select>
-          </div>
-          <div>
-            <label>Finish</label>
-            <select id="finish">
-              <option value="brushed">Brushed</option>
-              <option value="polished">Polished</option>
-              <option value="aged">Aged patina</option>
-            </select>
-          </div>
+        <div class="panel-head">
+          <div class="hint" style="margin:0">2D Compare Scan</div>
+          <button id="downloadMainPanelTop" class="btn secondary" disabled style="padding:6px 9px;font-size:.72rem">Download Main PNG</button>
         </div>
-
-        <div style="height:10px"></div>
-        <label>Lighting scene</label>
-        <select id="lighting">
-          <option value="studio">Studio product shot</option>
-          <option value="lobby">Architectural lobby</option>
-          <option value="daylight">Soft daylight wall</option>
-        </select>
-
-        <div style="height:10px"></div>
-        <label>Direction (optional)</label>
-        <textarea id="direction" placeholder="Example: Keep satin brass, crisp black enamel grooves, slight angle, premium reflections."></textarea>
-
-        <div style="height:12px"></div>
-        <button id="go" class="btn">Generate Etched Mockup</button>
-        <button id="download" class="btn secondary" disabled style="margin-top:8px">Download Main Mockup PNG</button>
-        <button id="downloadAll" class="btn secondary" disabled style="margin-top:8px">Download All Scene PNGs</button>
-        <button id="saveRev" class="btn secondary" disabled style="margin-top:8px">Save Revision Snapshot</button>
-        <div id="status" class="status"></div>
-
-        <div class="history">
-          <div class="toolhead">
-            <h4>Revision History</h4>
-            <button id="clearHistory" class="btn secondary" style="padding:5px 8px;font-size:.72rem">Clear</button>
-          </div>
-          <div id="historyList" class="hist-list"></div>
-        </div>
+        <div id="compareWrap" class="preview"><div class="muted">Generated etched output appears here</div></div>
       </section>
 
       <section class="card">
-        <div class="previewWrap">
-          <div>
-            <div class="panel-head">
-              <div class="hint" style="margin:0">Master Panel (2D scan + compare)</div>
-              <button id="downloadMainPanelTop" class="btn secondary" disabled style="padding:6px 9px;font-size:.72rem">Download Main PNG</button>
-            </div>
-            <div id="compareWrap" class="preview"><div class="muted">Generated etched output appears here</div></div>
-          </div>
-        </div>
-        <div style="margin-top:10px" class="hint">Installed context mockups</div>
+        <div class="hint" style="margin:0 0 8px">Installed context mockups</div>
         <div id="sceneGallery" class="scene-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="toolhead">
+          <h4>Revision History</h4>
+          <button id="clearHistory" class="btn secondary" style="padding:5px 8px;font-size:.72rem">Clear</button>
+        </div>
+        <div id="historyList" class="hist-list"></div>
       </section>
     </div>
   </div>
@@ -295,6 +321,7 @@ let compareSplit = 50;
 
 const samplesEl = document.getElementById('samples');
 const tabsEl = document.getElementById('sampleTabs');
+const srcPreviewTop = document.getElementById('srcPreviewTop');
 const compareWrap = document.getElementById('compareWrap');
 const statusEl = document.getElementById('status');
 const goBtn = document.getElementById('go');
@@ -307,16 +334,16 @@ const sceneGalleryEl = document.getElementById('sceneGallery');
 
 const scenePresets = [
   {
-    key:'elevator',
-    cls:'portrait',
-    title:'Elevator Door Install (9:16 Vertical)',
-    prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Show stainless door rails and realistic mounting scale. Keep panel art unchanged.'
-  },
-  {
     key:'wall',
     cls:'wall',
     title:'Floor-to-Ceiling Wall Cladding (~30°)',
     prompt:'Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Real fabrication scale, no stylization.'
+  },
+  {
+    key:'elevator',
+    cls:'portrait',
+    title:'Elevator Door Install (9:16 Vertical)',
+    prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Show stainless door rails and realistic mounting scale. Keep panel art unchanged.'
   }
 ];
 
@@ -353,6 +380,14 @@ function svgToPngDataUrl(svgText, outW=1600){
   });
 }
 
+function renderTopSource(){
+  if(!currentSvgText){
+    srcPreviewTop.innerHTML = '<div class="muted">Upload SVG or choose from library</div>';
+    return;
+  }
+  srcPreviewTop.innerHTML = currentSvgText;
+}
+
 function buildTabs(){
   const cats = ['All', ...Array.from(new Set(sampleData.map(s => s.category)))];
   tabsEl.innerHTML = '';
@@ -376,6 +411,7 @@ function renderSamples(){
       d.onclick = async () => {
         selectedSampleName = s.name;
         currentSvgText = s.svg;
+        renderTopSource();
         currentSourcePngDataUrl = await svgToPngDataUrl(currentSvgText, 1200);
         generatedDataUrl = ''; generatedScenes = []; renderCompare(); renderSceneGallery();
         dlBtn.disabled = true; dlMainTopBtn.disabled = true; dlAllBtn.disabled = true; saveRevBtn.disabled = true;
@@ -503,6 +539,7 @@ document.getElementById('svgFile').addEventListener('change', async (e)=>{
     if(!txt.includes('<svg')) throw new Error('File does not appear to be valid SVG.');
     selectedSampleName = '';
     currentSvgText = txt;
+    renderTopSource();
     currentSourcePngDataUrl = await svgToPngDataUrl(currentSvgText, 1200);
     generatedDataUrl = ''; generatedScenes = []; renderCompare(); renderSceneGallery();
     dlBtn.disabled = true; dlMainTopBtn.disabled = true; dlAllBtn.disabled = true; saveRevBtn.disabled = true;
@@ -638,6 +675,7 @@ renderSceneGallery();
 
 buildTabs();
 renderSamples();
+renderTopSource();
 renderHistory();
 renderSceneGallery();
 </script>
