@@ -209,6 +209,7 @@
       background:rgba(12,20,37,.92);
       backdrop-filter: blur(2px);
       pointer-events:auto;
+      touch-action:none;
     }
     .sliderWrap input {
       -webkit-appearance:none;
@@ -636,7 +637,30 @@ function renderCompare(){
 
   slider.addEventListener('input', (e)=> applySplit(e.target.value));
   slider.addEventListener('change', (e)=> applySplit(e.target.value));
+
+  // Mobile fallback: direct touch drag across slider lane
+  const sliderWrap = slider.closest('.sliderWrap');
+  const setFromClientX = (clientX) => {
+    const rect = slider.getBoundingClientRect();
+    const pct = ((clientX - rect.left) / rect.width) * 100;
+    applySplit(pct);
+  };
+
+  const onTouchMove = (e) => {
+    if (!e.touches || !e.touches[0]) return;
+    e.preventDefault();
+    setFromClientX(e.touches[0].clientX);
+  };
+
+  sliderWrap.addEventListener('touchstart', (e) => {
+    if (!e.touches || !e.touches[0]) return;
+    e.preventDefault();
+    setFromClientX(e.touches[0].clientX);
+  }, { passive:false });
+
+  sliderWrap.addEventListener('touchmove', onTouchMove, { passive:false });
 }
+
 
 
 async function callImageModel(imageBase64, fullPrompt){
