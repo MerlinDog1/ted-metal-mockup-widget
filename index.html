@@ -78,6 +78,21 @@
     .tabs { display:none; }
 
     .samples-wrap { position:relative; }
+    .car-btn {
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:6;
+      width:34px;
+      height:34px;
+      border-radius:999px;
+      border:1px solid #4d6b92;
+      background:rgba(10,20,38,.9);
+      color:#dff1ff;
+      cursor:pointer;
+    }
+    .car-btn.prev { left:4px; }
+    .car-btn.next { right:4px; }
     .samples {
       display:flex;
       gap:12px;
@@ -327,7 +342,9 @@
           <div style="height:10px"></div>
           <label>Pattern library (scroll sideways)</label>
           <div class="samples-wrap">
+            <button id="carPrev" class="car-btn prev" type="button">‹</button>
             <div class="samples" id="samples"></div>
+            <button id="carNext" class="car-btn next" type="button">›</button>
           </div>
 
           <div style="height:10px"></div>
@@ -505,6 +522,8 @@ let selectedSampleName = '';
 let compareSplit = 50;
 
 const samplesEl = document.getElementById('samples');
+const carPrevBtn = document.getElementById('carPrev');
+const carNextBtn = document.getElementById('carNext');
 const srcPreviewTop = document.getElementById('srcPreviewTop');
 const compareWrap = document.getElementById('compareWrap');
 const statusEl = document.getElementById('status');
@@ -960,33 +979,9 @@ samplesEl.addEventListener('wheel', (e) => {
   }
 }, { passive:false });
 
-let carDragging = false;
-let carStartX = 0;
-let carStartLeft = 0;
-
-samplesEl.addEventListener('pointerdown', (e) => {
-  carDragging = true;
-  samplesEl.classList.add('dragging');
-  carStartX = e.clientX;
-  carStartLeft = samplesEl.scrollLeft;
-  try { samplesEl.setPointerCapture(e.pointerId); } catch {}
-});
-
-samplesEl.addEventListener('pointermove', (e) => {
-  if (!carDragging) return;
-  const dx = e.clientX - carStartX;
-  samplesEl.scrollLeft = carStartLeft - dx;
-});
-
-const stopCarouselDrag = (e) => {
-  if (!carDragging) return;
-  carDragging = false;
-  samplesEl.classList.remove('dragging');
-  try { samplesEl.releasePointerCapture(e.pointerId); } catch {}
-};
-
-samplesEl.addEventListener('pointerup', stopCarouselDrag);
-samplesEl.addEventListener('pointercancel', stopCarouselDrag);
+const scrollStep = () => Math.max(260, Math.round(samplesEl.clientWidth * 0.65));
+carPrevBtn?.addEventListener('click', () => samplesEl.scrollBy({ left: -scrollStep(), behavior: 'smooth' }));
+carNextBtn?.addEventListener('click', () => samplesEl.scrollBy({ left: scrollStep(), behavior: 'smooth' }));
 </script>
 </body>
 </html>
