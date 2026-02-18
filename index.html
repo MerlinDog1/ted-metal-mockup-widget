@@ -541,6 +541,14 @@ const scenePresets = [
     cls:'wall',
     title:'Floor-to-Ceiling Wall Cladding (~30°)',
     baseImage:'./assets/wall-mural-base.png',
+    sceneSpec:`{
+  "scene_description": "Sophisticated modern hotel lobby/lounge with a massive illuminated brass feature wall of equally sized panels (1000mm x 2000mm), symmetrical seating, polished floor.",
+  "atmosphere": "Serene, warm, luxurious",
+  "lighting": "Artificial warm grazing light top and bottom + overhead decorative fixture",
+  "camera": "Eye-level wide shot, deep focus, focal point is glowing metallic panel wall",
+  "wall_material_baseline": "Brushed brass/gold with subtle vertical seams and soft patina",
+  "composition_notes": "Panel wall spans the visible background; maintain balanced high-end hospitality composition"
+}`,
     prompt:'Strict 16:9 landscape composition. Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Scale panel art down slightly so full composition breathes with visible margins. Real fabrication scale, no stylization.'
   },
   {
@@ -973,15 +981,14 @@ async function generateMockup(){
       let sceneBase64 = imageBase64ByScene[sc.key] || imageBase64ByScene.main;
       let scenePrompt = [strictLock, `Scene directive: ${sc.prompt}`].join(' ');
 
-      if (sc.baseImage) {
-        const templateRefDataUrl = await buildTemplateReference(sc.baseImage, sourceMainPng, 1400, 788);
-        sceneBase64 = templateRefDataUrl.split(',')[1];
+      if (sc.sceneSpec) {
         scenePrompt = [
           strictLock,
           `Scene directive: ${sc.prompt}`,
-          'TEMPLATE MODE: The main full scene in this image is the locked base template. Keep camera, furniture, architecture, and lighting composition nearly identical to the base scene.',
-          'The small square labeled PATTERN REFERENCE shows the exact artwork/material look to apply onto the brass wall panels only.',
-          'Do not redesign the room. Only update panel faces with the provided pattern treatment at realistic fabrication scale.'
+          'SCENE SPEC JSON (authoritative style/composition reference):',
+          sc.sceneSpec,
+          'Use this JSON spec as scene guidance rather than copying a base photo. Keep architecture consistent with spec while applying current material choice and supplied pattern geometry on panel faces only.',
+          'Override any baseline wall material in the JSON with the currently selected material/finish settings from the UI.'
         ].join(' ');
       }
 
