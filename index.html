@@ -540,6 +540,7 @@ const scenePresets = [
     key:'wall',
     cls:'wall',
     title:'Floor-to-Ceiling Wall Cladding (~30°)',
+    baseImage:'./assets/wall-mural-base.png',
     prompt:'Strict 16:9 landscape composition. Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Scale panel art down slightly so full composition breathes with visible margins. Real fabrication scale, no stylization.'
   },
   {
@@ -770,7 +771,11 @@ function renderSceneGallery(){
             <button class="btn secondary scene-dl" data-scene-key="${preset.key}" ${ready ? '' : 'disabled'}>Download</button>
           </div>
         </div>
-        ${ready ? `<img src="${sc.dataUrl}" alt="${preset.title}">` : `<div class="scene-ph"></div>`}
+        ${ready
+          ? `<img src="${sc.dataUrl}" alt="${preset.title}">`
+          : (preset.baseImage
+              ? `<img src="${preset.baseImage}" alt="${preset.title} base template">`
+              : `<div class="scene-ph"></div>`)}
       </article>
     `;
   }).join('');
