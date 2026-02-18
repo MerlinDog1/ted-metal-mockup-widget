@@ -82,6 +82,7 @@
       display:flex;
       gap:12px;
       overflow-x:auto;
+      overflow-y:hidden;
       max-width:100%;
       padding:8px calc(50% - 140px) 12px;
       scroll-snap-type:x mandatory;
@@ -90,11 +91,12 @@
       mask-image: linear-gradient(to right, transparent 0, black 10%, black 90%, transparent 100%);
       -webkit-mask-image: linear-gradient(to right, transparent 0, black 10%, black 90%, transparent 100%);
       scroll-behavior:smooth;
+      overscroll-behavior-x:contain;
     }
     .samples::-webkit-scrollbar { display:none; }
     .sample {
-      min-width:320px;
-      width:320px;
+      min-width:280px;
+      width:280px;
       border:1px solid #304865;
       border-radius:14px;
       background:linear-gradient(180deg, #0f1d36, #0d1830);
@@ -143,6 +145,11 @@
     .preview.square-preview {
       min-height: auto;
       aspect-ratio: 1 / 1;
+      max-width: min(82vw, 760px);
+      margin: 0 auto;
+    }
+    @media (max-width: 900px){
+      .preview.square-preview { max-width:100%; }
     }
     .preview img, .preview svg { max-width:100%; max-height:840px; display:block; }
 
@@ -170,7 +177,8 @@
     .compare {
       position: relative;
       width: 100%;
-      min-height: 460px;
+      height: 100%;
+      min-height: 0;
       background: #0b1322;
       display: grid;
       place-items: center;
