@@ -194,8 +194,25 @@
     }
     .compare .top { clip-path: inset(0 50% 0 0); }
     .divider {
-      position: absolute; top:0; bottom:0; width:2px; background: #78d8ff; left:50%; pointer-events:none;
+      position: absolute;
+      top:0;
+      bottom:0;
+      width:2px;
+      background: #78d8ff;
+      left:50%;
+      pointer-events:none;
       box-shadow: 0 0 0 1px rgba(255,255,255,.25);
+    }
+    .dragHandle {
+      position:absolute;
+      top:0;
+      bottom:0;
+      width:32px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:30;
+      touch-action:none;
+      cursor:ew-resize;
     }
     .sliderWrap {
       position:absolute;
@@ -606,6 +623,7 @@ function renderCompare(){
         <div class="base"><img src="${currentSourcePngDataUrl}" alt="Source"></div>
         <div id="topLayer" class="top" style="clip-path: inset(0 ${100-compareSplit}% 0 0)"><img src="${generatedDataUrl}" alt="Etched"></div>
         <div id="divider" class="divider" style="left:${compareSplit}%"></div>
+        <div id="dragHandle" class="dragHandle" style="left:${compareSplit}%"></div>
         <div id="compareSliderWrap" class="sliderWrap">
           <div id="compareTrack" class="sliderTrack">
             <div id="compareKnob" class="sliderKnob" style="left:${compareSplit}%"></div>
@@ -614,8 +632,10 @@ function renderCompare(){
       </div>
     </div>`;
 
+  const compareCanvas = document.getElementById('compareCanvas');
   const topLayer = document.getElementById('topLayer');
   const divider = document.getElementById('divider');
+  const dragHandle = document.getElementById('dragHandle');
   const sliderWrap = document.getElementById('compareSliderWrap');
   const sliderTrack = document.getElementById('compareTrack');
   const sliderKnob = document.getElementById('compareKnob');
@@ -624,38 +644,55 @@ function renderCompare(){
     compareSplit = Math.max(0, Math.min(100, Number(v) || 0));
     topLayer.style.clipPath = `inset(0 ${100-compareSplit}% 0 0)`;
     divider.style.left = `${compareSplit}%`;
+    dragHandle.style.left = `${compareSplit}%`;
     sliderKnob.style.left = `${compareSplit}%`;
   };
 
   const setFromClientX = (clientX) => {
-    const rect = sliderTrack.getBoundingClientRect();
+    const rect = compareCanvas.getBoundingClientRect();
     const pct = ((clientX - rect.left) / rect.width) * 100;
     applySplit(pct);
   };
 
   let dragging = false;
 
-  sliderWrap.addEventListener('pointerdown', (e) => {
+  const startDrag = (e) => {
     dragging = true;
-    sliderWrap.setPointerCapture(e.pointerId);
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
     setFromClientX(e.clientX);
     e.preventDefault();
-  });
+  };
 
-  sliderWrap.addEventListener('pointermove', (e) => {
+  const moveDrag = (e) => {
     if (!dragging) return;
     setFromClientX(e.clientX);
     e.preventDefault();
-  });
+  };
 
   const stopDrag = (e) => {
     if (!dragging) return;
     dragging = false;
-    try { sliderWrap.releasePointerCapture(e.pointerId); } catch {}
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
   };
 
-  sliderWrap.addEventListener('pointerup', stopDrag);
-  sliderWrap.addEventListener('pointercancel', stopDrag);
+  [dragHandle, sliderWrap, compareCanvas].forEach(el => {
+    el.addEventListener('pointerdown', startDrag);
+    el.addEventListener('pointermove', moveDrag);
+    el.addEventListener('pointerup', stopDrag);
+    el.addEventListener('pointercancel', stopDrag);
+  });
+
+  // Extra iOS touch fallback
+  const touchSet = (e) => {
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    setFromClientX(t.clientX);
+    e.preventDefault();
+  };
+  [dragHandle, sliderWrap, compareCanvas].forEach(el => {
+    el.addEventListener('touchstart', touchSet, { passive:false });
+    el.addEventListener('touchmove', touchSet, { passive:false });
+  });
 }
 
 
