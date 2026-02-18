@@ -982,6 +982,25 @@ samplesEl.addEventListener('wheel', (e) => {
 const scrollStep = () => Math.max(260, Math.round(samplesEl.clientWidth * 0.65));
 carPrevBtn?.addEventListener('click', () => samplesEl.scrollBy({ left: -scrollStep(), behavior: 'smooth' }));
 carNextBtn?.addEventListener('click', () => samplesEl.scrollBy({ left: scrollStep(), behavior: 'smooth' }));
+
+// Keyboard support: arrow keys scroll the pattern carousel when focused/hovered
+window.addEventListener('keydown', (e) => {
+  const isArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight';
+  if (!isArrow) return;
+
+  const active = document.activeElement;
+  const typing = active && (
+    active.tagName === 'INPUT' ||
+    active.tagName === 'TEXTAREA' ||
+    active.tagName === 'SELECT' ||
+    active.isContentEditable
+  );
+  if (typing) return;
+
+  const delta = e.key === 'ArrowLeft' ? -scrollStep() : scrollStep();
+  samplesEl.scrollBy({ left: delta, behavior: 'smooth' });
+  e.preventDefault();
+});
 </script>
 </body>
 </html>
