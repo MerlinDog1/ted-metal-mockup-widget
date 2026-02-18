@@ -85,18 +85,20 @@
       overflow-y:hidden;
       max-width:100%;
       padding:8px calc(50% - 140px) 12px;
-      scroll-snap-type:x mandatory;
+      scroll-snap-type:x proximity;
       scrollbar-width:none;
       -ms-overflow-style:none;
       mask-image: linear-gradient(to right, transparent 0, black 10%, black 90%, transparent 100%);
       -webkit-mask-image: linear-gradient(to right, transparent 0, black 10%, black 90%, transparent 100%);
       scroll-behavior:smooth;
       overscroll-behavior-x:contain;
+      cursor:grab;
     }
+    .samples.dragging { cursor:grabbing; }
     .samples::-webkit-scrollbar { display:none; }
     .sample {
-      min-width:280px;
-      width:280px;
+      min-width:260px;
+      width:260px;
       border:1px solid #304865;
       border-radius:14px;
       background:linear-gradient(180deg, #0f1d36, #0d1830);
@@ -144,10 +146,14 @@
     }
     .preview.square-preview {
       min-height: auto;
-      aspect-ratio: 1 / 1;
-      max-width: min(82vw, 760px);
+      aspect-ratio: auto;
+      max-width: min(74vw, 680px);
       margin: 0 auto;
+      overflow: visible;
+      background: transparent;
+      border: none;
     }
+    .preview.square-preview .compare { aspect-ratio:1/1; }
     @media (max-width: 900px){
       .preview.square-preview { max-width:100%; }
     }
@@ -945,6 +951,42 @@ renderSceneGallery();
 
 samplesEl.addEventListener('scroll', updateCarouselDepth, { passive:true });
 window.addEventListener('resize', updateCarouselDepth);
+
+// Desktop-friendly horizontal scroll helpers
+samplesEl.addEventListener('wheel', (e) => {
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+    samplesEl.scrollLeft += e.deltaY;
+    e.preventDefault();
+  }
+}, { passive:false });
+
+let carDragging = false;
+let carStartX = 0;
+let carStartLeft = 0;
+
+samplesEl.addEventListener('pointerdown', (e) => {
+  carDragging = true;
+  samplesEl.classList.add('dragging');
+  carStartX = e.clientX;
+  carStartLeft = samplesEl.scrollLeft;
+  try { samplesEl.setPointerCapture(e.pointerId); } catch {}
+});
+
+samplesEl.addEventListener('pointermove', (e) => {
+  if (!carDragging) return;
+  const dx = e.clientX - carStartX;
+  samplesEl.scrollLeft = carStartLeft - dx;
+});
+
+const stopCarouselDrag = (e) => {
+  if (!carDragging) return;
+  carDragging = false;
+  samplesEl.classList.remove('dragging');
+  try { samplesEl.releasePointerCapture(e.pointerId); } catch {}
+};
+
+samplesEl.addEventListener('pointerup', stopCarouselDrag);
+samplesEl.addEventListener('pointercancel', stopCarouselDrag);
 </script>
 </body>
 </html>
