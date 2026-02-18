@@ -203,7 +203,10 @@
       right:14px;
       bottom:10px;
       z-index:20;
-      padding:6px 8px;
+      height:34px;
+      display:grid;
+      align-items:center;
+      padding:0 10px;
       border:1px solid #3b5478;
       border-radius:10px;
       background:rgba(12,20,37,.92);
@@ -211,41 +214,24 @@
       pointer-events:auto;
       touch-action:none;
     }
-    .sliderWrap input {
-      -webkit-appearance:none;
-      appearance:none;
+    .sliderTrack {
+      position:relative;
       width:100%;
-      height:28px;
-      background:transparent;
-      touch-action: pan-y;
-    }
-    .sliderWrap input::-webkit-slider-runnable-track {
       height:6px;
-      background:#294567;
       border-radius:999px;
+      background:#294567;
     }
-    .sliderWrap input::-webkit-slider-thumb {
-      -webkit-appearance:none;
+    .sliderKnob {
+      position:absolute;
+      top:50%;
       width:20px;
       height:20px;
       border-radius:50%;
       background:#63d1ff;
       border:2px solid #d9f5ff;
-      margin-top:-7px;
+      transform:translate(-50%, -50%);
       box-shadow:0 0 0 3px rgba(99,209,255,.22);
-    }
-    .sliderWrap input::-moz-range-track {
-      height:6px;
-      background:#294567;
-      border-radius:999px;
-    }
-    .sliderWrap input::-moz-range-thumb {
-      width:20px;
-      height:20px;
-      border-radius:50%;
-      background:#63d1ff;
-      border:2px solid #d9f5ff;
-      box-shadow:0 0 0 3px rgba(99,209,255,.22);
+      pointer-events:none;
     }
 
 
@@ -620,45 +606,56 @@ function renderCompare(){
         <div class="base"><img src="${currentSourcePngDataUrl}" alt="Source"></div>
         <div id="topLayer" class="top" style="clip-path: inset(0 ${100-compareSplit}% 0 0)"><img src="${generatedDataUrl}" alt="Etched"></div>
         <div id="divider" class="divider" style="left:${compareSplit}%"></div>
-        <div class="sliderWrap"><input id="compareSlider" type="range" min="0" max="100" value="${compareSplit}" /></div>
+        <div id="compareSliderWrap" class="sliderWrap">
+          <div id="compareTrack" class="sliderTrack">
+            <div id="compareKnob" class="sliderKnob" style="left:${compareSplit}%"></div>
+          </div>
+        </div>
       </div>
     </div>`;
 
-  const slider = document.getElementById('compareSlider');
   const topLayer = document.getElementById('topLayer');
   const divider = document.getElementById('divider');
+  const sliderWrap = document.getElementById('compareSliderWrap');
+  const sliderTrack = document.getElementById('compareTrack');
+  const sliderKnob = document.getElementById('compareKnob');
 
   const applySplit = (v) => {
     compareSplit = Math.max(0, Math.min(100, Number(v) || 0));
     topLayer.style.clipPath = `inset(0 ${100-compareSplit}% 0 0)`;
     divider.style.left = `${compareSplit}%`;
-    slider.value = String(compareSplit);
+    sliderKnob.style.left = `${compareSplit}%`;
   };
 
-  slider.addEventListener('input', (e)=> applySplit(e.target.value));
-  slider.addEventListener('change', (e)=> applySplit(e.target.value));
-
-  // Mobile fallback: direct touch drag across slider lane
-  const sliderWrap = slider.closest('.sliderWrap');
   const setFromClientX = (clientX) => {
-    const rect = slider.getBoundingClientRect();
+    const rect = sliderTrack.getBoundingClientRect();
     const pct = ((clientX - rect.left) / rect.width) * 100;
     applySplit(pct);
   };
 
-  const onTouchMove = (e) => {
-    if (!e.touches || !e.touches[0]) return;
+  let dragging = false;
+
+  sliderWrap.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    sliderWrap.setPointerCapture(e.pointerId);
+    setFromClientX(e.clientX);
     e.preventDefault();
-    setFromClientX(e.touches[0].clientX);
+  });
+
+  sliderWrap.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    setFromClientX(e.clientX);
+    e.preventDefault();
+  });
+
+  const stopDrag = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    try { sliderWrap.releasePointerCapture(e.pointerId); } catch {}
   };
 
-  sliderWrap.addEventListener('touchstart', (e) => {
-    if (!e.touches || !e.touches[0]) return;
-    e.preventDefault();
-    setFromClientX(e.touches[0].clientX);
-  }, { passive:false });
-
-  sliderWrap.addEventListener('touchmove', onTouchMove, { passive:false });
+  sliderWrap.addEventListener('pointerup', stopDrag);
+  sliderWrap.addEventListener('pointercancel', stopDrag);
 }
 
 
