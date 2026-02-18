@@ -542,12 +542,286 @@ const scenePresets = [
     title:'Floor-to-Ceiling Wall Cladding (~30°)',
     baseImage:'./assets/wall-mural-base.png',
     sceneSpec:`{
-  "scene_description": "Sophisticated modern hotel lobby/lounge with a massive illuminated brass feature wall of equally sized panels (1000mm x 2000mm), symmetrical seating, polished floor.",
-  "atmosphere": "Serene, warm, luxurious",
-  "lighting": "Artificial warm grazing light top and bottom + overhead decorative fixture",
-  "camera": "Eye-level wide shot, deep focus, focal point is glowing metallic panel wall",
-  "wall_material_baseline": "Brushed brass/gold with subtle vertical seams and soft patina",
-  "composition_notes": "Panel wall spans the visible background; maintain balanced high-end hospitality composition"
+  "meta": {
+    "image_quality": "High",
+    "image_type": "Photo",
+    "resolution_estimation": "High definition"
+  },
+  "global_context": {
+    "scene_description": "A sophisticated, modern interior space, likely a hotel lobby or upscale lounge. The room is visually dominated by a massive, brilliantly illuminated brass or gold-toned paneled feature wall of equally sized panels each 100cm wide 200cm tall. Several seating arrangements featuring plush velvet and dark leather sofas, along with dark wood tables, are positioned symmetrically on a highly polished floor.",
+    "time_of_day": "Indeterminate (Artificial interior lighting)",
+    "weather_atmosphere": "Serene, warm, luxurious",
+    "lighting": {
+      "source": "Artificial",
+      "direction": "Grazing (top-down and bottom-up on the wall), overhead (chandelier)",
+      "quality": "Diffused with specular highlights on reflective surfaces",
+      "color_temp": "Warm"
+    }
+  },
+  "color_palette": {
+    "dominant_hex_estimates": ["#c5a059", "#d9bd7e", "#4a4138", "#8e7f70"],
+    "accent_colors": ["Warm white", "Dark espresso"],
+    "contrast_level": "High"
+  },
+  "composition": {
+    "camera_angle": "Eye-level",
+    "framing": "Wide-shot",
+    "depth_of_field": "Deep (everything in focus)",
+    "focal_point": "The glowing, textured metallic feature wall"
+  },
+  "objects": [
+    {
+      "id": "obj_001",
+      "label": "Feature Wall",
+      "category": "Architecture",
+      "location": "Background/Center",
+      "prominence": "Background",
+      "visual_attributes": {
+        "color": "Gradient of glowing gold, brass, and deep bronze",
+        "texture": "Brushed metallic, vertically paneled",
+        "material": "Metal (Brass/Bronze)",
+        "state": "Pristine, polished",
+        "dimensions_relative": "Spans the entire width and height of the visible background"
+      },
+      "micro_details": [
+        "Vertical seams dividing the panels uniformly",
+        "Subtle horizontal brushing or patination visible in the metal",
+        "Bright grazing light catching the top and bottom edges",
+        "Reflects the ambient light of the room"
+      ],
+      "pose_or_orientation": "Vertical, facing the camera",
+      "text_content": null
+    },
+    {
+      "id": "obj_002",
+      "label": "Modern Chandelier",
+      "category": "Lighting",
+      "location": "Top-Center",
+      "prominence": "Foreground/Top",
+      "visual_attributes": {
+        "color": "Brass/Bronze arms with white bulbs",
+        "texture": "Smooth metallic, frosted glass",
+        "material": "Metal and Glass",
+        "state": "New, functional",
+        "dimensions_relative": "Wide but thin profile"
+      },
+      "micro_details": [
+        "Multiple thin radiating arms forming a starburst or spidery shape",
+        "Small cylindrical frosted bulbs at the end of each arm",
+        "Suspended by a central downrod"
+      ],
+      "pose_or_orientation": "Suspended horizontally",
+      "text_content": null
+    },
+    {
+      "id": "obj_003",
+      "label": "Center-Left Velvet Sofa",
+      "category": "Furniture",
+      "location": "Bottom-Left",
+      "prominence": "Foreground",
+      "visual_attributes": {
+        "color": "Light taupe/mocha",
+        "texture": "Soft, matte velvet",
+        "material": "Fabric",
+        "state": "Excellent condition",
+        "dimensions_relative": "Large, occupies lower left quadrant"
+      },
+      "micro_details": [
+        "Segmented back cushions",
+        "Two matching throw pillows positioned at an angle",
+        "Thin dark metal legs elevating it off the floor",
+        "Visible nap direction in the velvet fabric"
+      ],
+      "pose_or_orientation": "Angled slightly inward towards the center",
+      "text_content": null
+    },
+    {
+      "id": "obj_004",
+      "label": "Far-Left Velvet Sofa",
+      "category": "Furniture",
+      "location": "Far Bottom-Left edge",
+      "prominence": "Foreground edge",
+      "visual_attributes": {
+        "color": "Light taupe/mocha",
+        "texture": "Soft velvet",
+        "material": "Fabric",
+        "state": "Excellent condition",
+        "dimensions_relative": "Partially cropped by frame"
+      },
+      "micro_details": ["Matches the design of the center-left sofa"],
+      "pose_or_orientation": "Facing right",
+      "text_content": null
+    },
+    {
+      "id": "obj_005",
+      "label": "Left Coffee Table",
+      "category": "Furniture",
+      "location": "Bottom-Left corner",
+      "prominence": "Foreground edge",
+      "visual_attributes": {
+        "color": "Dark brown/black",
+        "texture": "Smooth, slightly reflective",
+        "material": "Wood or dark metal",
+        "state": "Clean",
+        "dimensions_relative": "Low and wide"
+      },
+      "micro_details": ["Square or rectangular profile", "Reflecting light from the ceiling"],
+      "pose_or_orientation": "Horizontal",
+      "text_content": null
+    },
+    {
+      "id": "obj_006",
+      "label": "Decorative Object on Left Table",
+      "category": "Decor",
+      "location": "Bottom-Left corner, on table",
+      "prominence": "Foreground edge",
+      "visual_attributes": {
+        "color": "Pale green/grey",
+        "texture": "Smooth",
+        "material": "Ceramic or glass",
+        "state": "Pristine",
+        "dimensions_relative": "Small"
+      },
+      "micro_details": ["Cylindrical shape, likely a candle or small vase"],
+      "pose_or_orientation": "Upright",
+      "text_content": null
+    },
+    {
+      "id": "obj_007",
+      "label": "Console Table",
+      "category": "Furniture",
+      "location": "Bottom-Right",
+      "prominence": "Foreground",
+      "visual_attributes": {
+        "color": "Dark espresso/black",
+        "texture": "Smooth wood grain",
+        "material": "Wood",
+        "state": "Excellent condition",
+        "dimensions_relative": "Medium, rectangular"
+      },
+      "micro_details": ["Thick top surface", "Lower shelf visible", "Clean, sharp 90-degree edges"],
+      "pose_or_orientation": "Horizontal, facing camera",
+      "text_content": null
+    },
+    {
+      "id": "obj_008",
+      "label": "Book",
+      "category": "Decor",
+      "location": "Bottom-Right, on console table",
+      "prominence": "Foreground",
+      "visual_attributes": {
+        "color": "White pages, dark cover",
+        "texture": "Paper/Cardboard",
+        "material": "Paper",
+        "state": "Closed, flat",
+        "dimensions_relative": "Small"
+      },
+      "micro_details": ["Large format, likely a coffee table book", "Resting perfectly flat in the center of the console"],
+      "pose_or_orientation": "Flat horizontal",
+      "text_content": null
+    },
+    {
+      "id": "obj_009",
+      "label": "Right Leather Sofa",
+      "category": "Furniture",
+      "location": "Bottom-Right edge",
+      "prominence": "Foreground edge",
+      "visual_attributes": {
+        "color": "Dark brown",
+        "texture": "Smooth, slightly glossy",
+        "material": "Leather and wood frame",
+        "state": "Excellent condition",
+        "dimensions_relative": "Partially cropped by frame"
+      },
+      "micro_details": ["Exposed wood frame visible on the side and back", "Deep seat cushions"],
+      "pose_or_orientation": "Facing left",
+      "text_content": null
+    },
+    {
+      "id": "obj_010",
+      "label": "Right Coffee Table",
+      "category": "Furniture",
+      "location": "Bottom-Right edge",
+      "prominence": "Foreground edge",
+      "visual_attributes": {
+        "color": "Medium-dark brown",
+        "texture": "Smooth wood grain",
+        "material": "Wood",
+        "state": "Clean",
+        "dimensions_relative": "Low, flat"
+      },
+      "micro_details": ["Sharp edges, minimalist design"],
+      "pose_or_orientation": "Horizontal",
+      "text_content": null
+    },
+    {
+      "id": "obj_011",
+      "label": "Decorative Object on Right Table",
+      "category": "Decor",
+      "location": "Bottom-Right edge, on table",
+      "prominence": "Foreground edge",
+      "visual_attributes": {
+        "color": "Metallic/Brass",
+        "texture": "Smooth",
+        "material": "Metal or glass",
+        "state": "Pristine",
+        "dimensions_relative": "Small"
+      },
+      "micro_details": ["Cylindrical shape, catching a bright reflection from the lighting"],
+      "pose_or_orientation": "Upright",
+      "text_content": null
+    },
+    {
+      "id": "obj_012",
+      "label": "Polished Floor",
+      "category": "Architecture",
+      "location": "Bottom half",
+      "prominence": "Foreground/Midground",
+      "visual_attributes": {
+        "color": "Grey/Taupe with warm reflections",
+        "texture": "Smooth, highly polished",
+        "material": "Concrete or large format tile",
+        "state": "Clean, highly reflective",
+        "dimensions_relative": "Covers the entire floor plane"
+      },
+      "micro_details": [
+        "Clear, distorted reflections of the illuminated wall paneling",
+        "Reflections of the dark console table and sofa legs",
+        "Subtle variations in the grey base color suggesting concrete"
+      ],
+      "pose_or_orientation": "Horizontal plane",
+      "text_content": null
+    },
+    {
+      "id": "obj_013",
+      "label": "Area Rugs",
+      "category": "Decor",
+      "location": "Underneath seating areas",
+      "prominence": "Foreground",
+      "visual_attributes": {
+        "color": "Dark grey/black",
+        "texture": "Matte, low pile",
+        "material": "Textile",
+        "state": "Clean",
+        "dimensions_relative": "Large, anchors the furniture groupings"
+      },
+      "micro_details": [
+        "Creates a contrast against the highly polished floor",
+        "Edges are straight and parallel to the furniture"
+      ],
+      "pose_or_orientation": "Flat on the floor",
+      "text_content": null
+    }
+  ],
+  "text_ocr": {"present": false, "content": []},
+  "semantic_relationships": [
+    "The Modern Chandelier is suspended from the ceiling and visually centers the frame over the seating area.",
+    "Hidden lighting fixtures are casting light upward and downward onto the Feature Wall.",
+    "The Polished Floor is reflecting the light and color of the Feature Wall.",
+    "The Area Rugs are positioned underneath the Sofas and Coffee Tables to define the seating spaces.",
+    "The Book is resting directly on top of the Console Table.",
+    "The Decorative Objects are resting on their respective Coffee Tables."
+  ]
 }`,
     prompt:'Strict 16:9 landscape composition. Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Scale panel art down slightly so full composition breathes with visible margins. Real fabrication scale, no stylization.'
   },
