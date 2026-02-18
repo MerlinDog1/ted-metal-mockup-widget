@@ -599,6 +599,50 @@ function renderTopSource(){
   srcPreviewTop.innerHTML = currentSvgText;
 }
 
+function loadImage(urlOrDataUrl){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Failed to load image: ${urlOrDataUrl}`));
+    img.src = urlOrDataUrl;
+  });
+}
+
+async function buildTemplateReference(baseImageUrl, patternDataUrl, outW=1920, outH=1080){
+  const [baseImg, patternImg] = await Promise.all([
+    loadImage(baseImageUrl),
+    loadImage(patternDataUrl)
+  ]);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = outW;
+  canvas.height = outH;
+  const ctx = canvas.getContext('2d');
+
+  // Base scene full-bleed
+  ctx.drawImage(baseImg, 0, 0, outW, outH);
+
+  // Pattern reference swatch in corner (single-image multimodal hint)
+  const sw = Math.round(outW * 0.22);
+  const sh = sw;
+  const pad = Math.round(outW * 0.02);
+  const x = outW - sw - pad;
+  const y = outH - sh - pad;
+
+  ctx.fillStyle = 'rgba(255,255,255,0.98)';
+  ctx.fillRect(x-6, y-28, sw+12, sh+34);
+  ctx.strokeStyle = '#111';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x-6, y-28, sw+12, sh+34);
+
+  ctx.fillStyle = '#111';
+  ctx.font = 'bold 18px sans-serif';
+  ctx.fillText('PATTERN REFERENCE', x+8, y-8);
+  ctx.drawImage(patternImg, x, y, sw, sh);
+
+  return canvas.toDataURL('image/png');
+}
+
 function updateCarouselDepth(){
   const cards = samplesEl.querySelectorAll('.sample');
   if(!cards.length) return;
@@ -892,8 +936,22 @@ async function generateMockup(){
     for (let i = 0; i < scenePresets.length; i++) {
       const sc = scenePresets[i];
       setStatus(`Rendering context ${i+1}/${scenePresets.length}: ${sc.title}…`);
-      const scenePrompt = [strictLock, `Scene directive: ${sc.prompt}`].join(' ');
-      const sceneBase64 = imageBase64ByScene[sc.key] || imageBase64ByScene.main;
+
+      let sceneBase64 = imageBase64ByScene[sc.key] || imageBase64ByScene.main;
+      let scenePrompt = [strictLock, `Scene directive: ${sc.prompt}`].join(' ');
+
+      if (sc.baseImage) {
+        const templateRefDataUrl = await buildTemplateReference(sc.baseImage, sourceMainPng, 1920, 1080);
+        sceneBase64 = templateRefDataUrl.split(',')[1];
+        scenePrompt = [
+          strictLock,
+          `Scene directive: ${sc.prompt}`,
+          'TEMPLATE MODE: The main full scene in this image is the locked base template. Keep camera, furniture, architecture, and lighting composition nearly identical to the base scene.',
+          'The small square labeled PATTERN REFERENCE shows the exact artwork/material look to apply onto the brass wall panels only.',
+          'Do not redesign the room. Only update panel faces with the provided pattern treatment at realistic fabrication scale.'
+        ].join(' ');
+      }
+
       const dataUrl = await callImageModel(sceneBase64, scenePrompt);
       generatedScenes.push({ key: sc.key, cls: sc.cls, title: sc.title, dataUrl });
       renderSceneGallery();
