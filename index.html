@@ -829,6 +829,223 @@ const scenePresets = [
     key:'elevator',
     cls:'portrait',
     title:'Elevator Door Install (9:16 Vertical)',
+    sceneSpec:`{
+  "meta": {
+    "image_quality": "High",
+    "image_type": "Photo",
+    "resolution_estimation": "1080x1920"
+  },
+  "global_context": {
+    "scene_description": "A direct, symmetrical, frontal view of a set of closed brass or gold-colored elevator doors set within a white, lightly veined marble wall, resting above a light-colored speckled terrazzo floor with a geometric brass inlay pattern.",
+    "time_of_day": "Indeterminate (Artificial Interior Lighting)",
+    "weather_atmosphere": "Serene",
+    "lighting": {
+      "source": "Artificial",
+      "direction": "Frontal/Ambient",
+      "quality": "Soft",
+      "color_temp": "Warm"
+    }
+  },
+  "color_palette": {
+    "dominant_hex_estimates": ["#A88B4B", "#EBEBE9", "#C7AD66"],
+    "accent_colors": ["Dark Charcoal", "Soft Gray"],
+    "contrast_level": "Medium"
+  },
+  "composition": {
+    "camera_angle": "Eye-level",
+    "framing": "Medium-shot",
+    "depth_of_field": "Deep",
+    "focal_point": "The central vertical seam where the two elevator doors meet."
+  },
+  "objects": [
+    {
+      "id": "obj_001",
+      "label": "Left Elevator Door",
+      "category": "Architectural Element",
+      "location": "Center-Left",
+      "prominence": "Foreground",
+      "visual_attributes": {
+        "color": "Brushed brass/gold with varied vertical lighting gradients",
+        "texture": "Smooth metallic with subtle vertical brushing",
+        "material": "Metal (Brass/Bronze)",
+        "state": "Well-maintained, minor surface variations in reflection",
+        "dimensions_relative": "Takes up approximately 35% of the frame"
+      },
+      "micro_details": [
+        "Small, dark, circular keyhole located in the upper-mid section",
+        "Vertical highlight gradient reflecting ambient light",
+        "Subtle darker vertical bands near the central seam"
+      ],
+      "pose_or_orientation": "Vertical/Closed",
+      "text_content": null
+    },
+    {
+      "id": "obj_002",
+      "label": "Right Elevator Door",
+      "category": "Architectural Element",
+      "location": "Center-Right",
+      "prominence": "Foreground",
+      "visual_attributes": {
+        "color": "Brushed brass/gold with varied vertical lighting gradients",
+        "texture": "Smooth metallic with subtle vertical brushing",
+        "material": "Metal (Brass/Bronze)",
+        "state": "Well-maintained, minor surface variations in reflection",
+        "dimensions_relative": "Takes up approximately 35% of the frame"
+      },
+      "micro_details": [
+        "Vertical highlight gradient reflecting ambient light matching the left door",
+        "Slightly lighter reflection band near the outer right edge"
+      ],
+      "pose_or_orientation": "Vertical/Closed",
+      "text_content": null
+    },
+    {
+      "id": "obj_003",
+      "label": "Elevator Door Frame",
+      "category": "Architectural Element",
+      "location": "Bordering the doors (Top, Left, Right)",
+      "prominence": "Foreground",
+      "visual_attributes": {
+        "color": "Polished brass/gold",
+        "texture": "Smooth metallic",
+        "material": "Metal",
+        "state": "Clean, highly reflective",
+        "dimensions_relative": "Thin border enclosing the main doors"
+      },
+      "micro_details": [
+        "Slight shadow cast onto the door panels",
+        "Crisp 90-degree corners at the top left and right"
+      ],
+      "pose_or_orientation": "Framing",
+      "text_content": null
+    },
+    {
+      "id": "obj_004",
+      "label": "Marble Wall (Left)",
+      "category": "Architectural Element",
+      "location": "Left border",
+      "prominence": "Background",
+      "visual_attributes": {
+        "color": "White with soft gray veining",
+        "texture": "Smooth, polished stone",
+        "material": "Marble",
+        "state": "Pristine",
+        "dimensions_relative": "Vertical strip occupying the left 10% of the frame"
+      },
+      "micro_details": [
+        "Diagonal and vertical gray veins",
+        "Subtle horizontal seam visible midway up the wall"
+      ],
+      "pose_or_orientation": "Vertical",
+      "text_content": null
+    },
+    {
+      "id": "obj_005",
+      "label": "Marble Wall (Right)",
+      "category": "Architectural Element",
+      "location": "Right border",
+      "prominence": "Background",
+      "visual_attributes": {
+        "color": "White with soft gray veining",
+        "texture": "Smooth, polished stone",
+        "material": "Marble",
+        "state": "Pristine",
+        "dimensions_relative": "Vertical strip occupying the right 10% of the frame"
+      },
+      "micro_details": [
+        "Diagonal and vertical gray veins",
+        "Subtle horizontal seam visible midway up the wall, mirroring the left side"
+      ],
+      "pose_or_orientation": "Vertical",
+      "text_content": null
+    },
+    {
+      "id": "obj_006",
+      "label": "Floor",
+      "category": "Architectural Element",
+      "location": "Bottom",
+      "prominence": "Foreground",
+      "visual_attributes": {
+        "color": "Off-white with multi-colored gray and tan speckles",
+        "texture": "Granular/speckled",
+        "material": "Terrazzo or polished concrete aggregate",
+        "state": "Clean",
+        "dimensions_relative": "Occupies the bottom 15% of the frame"
+      },
+      "micro_details": ["Dense speckling of dark and light aggregate chips"],
+      "pose_or_orientation": "Horizontal",
+      "text_content": null
+    },
+    {
+      "id": "obj_007",
+      "label": "Floor Inlay Pattern",
+      "category": "Architectural Element",
+      "location": "Bottom, embedded in floor",
+      "prominence": "Foreground",
+      "visual_attributes": {
+        "color": "Brass/Gold",
+        "texture": "Smooth metallic",
+        "material": "Metal",
+        "state": "Slightly worn from foot traffic",
+        "dimensions_relative": "Thin intersecting lines"
+      },
+      "micro_details": [
+        "Horizontal line running parallel to the elevator threshold",
+        "Intersecting diagonal lines forming an 'X' or diamond pattern below the horizontal line"
+      ],
+      "pose_or_orientation": "Geometric pattern on horizontal plane",
+      "text_content": null
+    },
+    {
+      "id": "obj_008",
+      "label": "Left Call Button Panel",
+      "category": "Hardware",
+      "location": "Mid-height, embedded in the left side of the brass frame",
+      "prominence": "Midground",
+      "visual_attributes": {
+        "color": "Dark Charcoal/Black",
+        "texture": "Smooth",
+        "material": "Plastic or dark metal",
+        "state": "Clean",
+        "dimensions_relative": "Very small vertical rectangle"
+      },
+      "micro_details": [
+        "Recessed into the brass framing",
+        "Specific button shapes not clearly discernable due to scale and shadow"
+      ],
+      "pose_or_orientation": "Vertical",
+      "text_content": null
+    },
+    {
+      "id": "obj_009",
+      "label": "Right Call Button Panel",
+      "category": "Hardware",
+      "location": "Mid-height, embedded in the right side of the brass frame",
+      "prominence": "Midground",
+      "visual_attributes": {
+        "color": "Dark Charcoal/Black",
+        "texture": "Smooth",
+        "material": "Plastic or dark metal",
+        "state": "Clean",
+        "dimensions_relative": "Very small vertical rectangle"
+      },
+      "micro_details": [
+        "Recessed into the brass framing",
+        "Matches the height and alignment of the left panel"
+      ],
+      "pose_or_orientation": "Vertical",
+      "text_content": null
+    }
+  ],
+  "text_ocr": {"present": false, "content": []},
+  "semantic_relationships": [
+    "obj_003 (Elevator Door Frame) is enclosing obj_001 (Left Elevator Door) and obj_002 (Right Elevator Door)",
+    "obj_001 (Left Elevator Door) is flush against obj_002 (Right Elevator Door)",
+    "obj_004 (Marble Wall) and obj_005 (Marble Wall) flank obj_003 (Elevator Door Frame)",
+    "obj_008 (Left Call Button Panel) is embedded within obj_003 (Elevator Door Frame)",
+    "obj_007 (Floor Inlay Pattern) is embedded within obj_006 (Floor)"
+  ]
+}`,
     prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Show stainless door rails and realistic mounting scale. Scale panel artwork down slightly within door area for cleaner framing. Keep panel art unchanged.'
   }
 ];
