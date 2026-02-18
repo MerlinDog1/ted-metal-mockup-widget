@@ -166,7 +166,7 @@
     }
     .top-source img, .top-source svg { max-width:100%; max-height:100%; display:block; object-fit:contain; }
 
-    .compare-shell { width:100%; }
+    .compare-shell { width:100%; display:grid; gap:8px; }
     .compare {
       position: relative;
       width: 100%;
@@ -183,7 +183,7 @@
       inset: 0;
       display: grid;
       place-items: center;
-      padding: 10px 10px 46px;
+      padding: 10px;
       pointer-events:none;
     }
     .compare .base img, .compare .top img {
@@ -215,19 +215,15 @@
       cursor:ew-resize;
     }
     .sliderWrap {
-      position:absolute;
-      left:14px;
-      right:14px;
-      bottom:10px;
+      position:relative;
       z-index:20;
-      height:34px;
+      height:38px;
       display:grid;
       align-items:center;
       padding:0 10px;
-      border:1px solid #3b5478;
+      border:1px solid #4b688f;
       border-radius:10px;
-      background:rgba(12,20,37,.92);
-      backdrop-filter: blur(2px);
+      background:rgba(12,20,37,.98);
       pointer-events:auto;
       touch-action:none;
     }
@@ -624,10 +620,10 @@ function renderCompare(){
         <div id="topLayer" class="top" style="clip-path: inset(0 ${100-compareSplit}% 0 0)"><img src="${generatedDataUrl}" alt="Etched"></div>
         <div id="divider" class="divider" style="left:${compareSplit}%"></div>
         <div id="dragHandle" class="dragHandle" style="left:${compareSplit}%"></div>
-        <div id="compareSliderWrap" class="sliderWrap">
-          <div id="compareTrack" class="sliderTrack">
-            <div id="compareKnob" class="sliderKnob" style="left:${compareSplit}%"></div>
-          </div>
+      </div>
+      <div id="compareSliderWrap" class="sliderWrap">
+        <div id="compareTrack" class="sliderTrack">
+          <div id="compareKnob" class="sliderKnob" style="left:${compareSplit}%"></div>
         </div>
       </div>
     </div>`;
