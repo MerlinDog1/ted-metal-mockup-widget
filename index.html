@@ -823,7 +823,7 @@ const scenePresets = [
     "The Decorative Objects are resting on their respective Coffee Tables."
   ]
 }`,
-    prompt:'Strict 16:9 landscape composition. Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Use finer, denser repeat scale (smaller motif size) than default. Keep panel art continuous and coherent across seams. Real fabrication scale, no stylization.'
+    prompt:'Strict 16:9 landscape composition. Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Use moderately smaller repeat scale than default (not micro-texture). Keep panel art continuous and coherent across seams. Real fabrication scale, no stylization.'
   },
   {
     key:'elevator',
@@ -1142,27 +1142,6 @@ async function buildTemplateReference(baseImageUrl, patternDataUrl, outW=1920, o
   return canvas.toDataURL('image/png');
 }
 
-async function buildDensePatternReference(patternDataUrl, outW=1024, outH=1024, density=2.6){
-  const patternImg = await loadImage(patternDataUrl);
-  const canvas = document.createElement('canvas');
-  canvas.width = outW;
-  canvas.height = outH;
-  const ctx = canvas.getContext('2d');
-
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, outW, outH);
-
-  const tileW = Math.max(24, Math.round((patternImg.width / density) * 0.9));
-  const tileH = Math.max(24, Math.round((patternImg.height / density) * 0.9));
-
-  for (let y = 0; y < outH; y += tileH) {
-    for (let x = 0; x < outW; x += tileW) {
-      ctx.drawImage(patternImg, x, y, tileW, tileH);
-    }
-  }
-
-  return canvas.toDataURL('image/png');
-}
 
 function updateCarouselDepth(){
   const cards = samplesEl.querySelectorAll('.sample');
@@ -1503,19 +1482,9 @@ async function generateMockup(){
           'Use this JSON spec as scene guidance rather than copying a base photo. Keep architecture consistent with spec while applying current material choice and supplied pattern geometry on panel faces only.',
           'Override any baseline wall material in the JSON with the currently selected material/finish settings from the UI.',
           sc.key === 'elevator' ? 'CRITICAL ELEVATOR CLEANUP: No horizontal bars/rails/strips across door faces. Only allow clean vertical center seam and perimeter frame. Pattern coverage must extend across full door height/width on both leaves with continuous seam alignment.' : '',
-          sc.key === 'wall' || sc.key === 'elevator' ? 'PATTERN SCALE CONTROL: reduce motif size by ~35-45% versus default (finer tiling, higher repeat count).' : ''
+          sc.key === 'wall' ? 'PATTERN SCALE CONTROL (WALL): reduce motif size by ~20-25% versus default and keep motif crisp/clean.' : '',
+          sc.key === 'elevator' ? 'PATTERN SCALE CONTROL (ELEVATOR): reduce motif size by ~35-45% versus default.' : ''
         ].filter(Boolean).join(' ');
-      }
-
-      if (sc.key === 'wall') {
-        const densePatternRef = await buildDensePatternReference(sourceMainPng, 1024, 1024, 2.9);
-        const wallTemplateWithDenseRef = await buildTemplateReference(sc.baseImage || './assets/wall-mural-base.png', densePatternRef, 1400, 788);
-        sceneBase64 = wallTemplateWithDenseRef.split(',')[1];
-        scenePrompt = [
-          scenePrompt,
-          'WALL SCALE OVERRIDE: match repeat frequency from the PATTERN REFERENCE swatch exactly (dense/small motif). Do not enlarge motif on wall panels.',
-          'Keep lobby camera/framing aligned to the base scene; avoid changing viewing angle.'
-        ].join(' ');
       }
 
       const dataUrl = await callImageModel(sceneBase64, scenePrompt);
