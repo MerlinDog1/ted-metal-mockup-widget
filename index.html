@@ -1046,7 +1046,7 @@ const scenePresets = [
     "obj_007 (Floor Inlay Pattern) is embedded within obj_006 (Floor)"
   ]
 }`,
-    prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Show stainless door rails and realistic mounting scale. Scale panel artwork down slightly within door area for cleaner framing. Keep panel art unchanged.'
+    prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Realistic commercial lift proportions. Scale panel artwork down slightly within door area for cleaner framing. Keep panel art unchanged. Do NOT add horizontal crash bars, push bars, guard rails, handrails, kick rails, or random horizontal metal strips across the elevator doors.'
   }
 ];
 
@@ -1479,8 +1479,9 @@ async function generateMockup(){
           'SCENE SPEC JSON (authoritative style/composition reference):',
           sc.sceneSpec,
           'Use this JSON spec as scene guidance rather than copying a base photo. Keep architecture consistent with spec while applying current material choice and supplied pattern geometry on panel faces only.',
-          'Override any baseline wall material in the JSON with the currently selected material/finish settings from the UI.'
-        ].join(' ');
+          'Override any baseline wall material in the JSON with the currently selected material/finish settings from the UI.',
+          sc.key === 'elevator' ? 'CRITICAL ELEVATOR CLEANUP: No horizontal bars/rails/strips across door faces. Only allow clean vertical center seam and perimeter frame.' : ''
+        ].filter(Boolean).join(' ');
       }
 
       const dataUrl = await callImageModel(sceneBase64, scenePrompt);
