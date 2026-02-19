@@ -823,7 +823,7 @@ const scenePresets = [
     "The Decorative Objects are resting on their respective Coffee Tables."
   ]
 }`,
-    prompt:'Strict 16:9 landscape composition. Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Scale panel art down slightly so full composition breathes with visible margins. Real fabrication scale, no stylization.'
+    prompt:'Strict 16:9 landscape composition. Architectural perspective around 30 degrees. Show pattern distributed across several tall vertical panels from floor to ceiling in a premium interior. Use finer, denser repeat scale (smaller motif size) than default. Keep panel art continuous and coherent across seams. Real fabrication scale, no stylization.'
   },
   {
     key:'elevator',
@@ -1046,7 +1046,7 @@ const scenePresets = [
     "obj_007 (Floor Inlay Pattern) is embedded within obj_006 (Floor)"
   ]
 }`,
-    prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Realistic commercial lift proportions. Scale panel artwork down slightly within door area for cleaner framing. Keep panel art unchanged. Do NOT add horizontal crash bars, push bars, guard rails, handrails, kick rails, or random horizontal metal strips across the elevator doors.'
+    prompt:'Strict 9:16 vertical composition. Close-up of elevator exterior with a crisp vertical center seam where the two doors meet. Realistic commercial lift proportions. Apply pattern across the full height and width of BOTH door leaves (not a partial band). Use finer, denser repeat scale (smaller motif size) than default. Keep the pattern continuous/aligned across the center seam. Do NOT add horizontal crash bars, push bars, guard rails, handrails, kick rails, or random horizontal metal strips across the elevator doors.'
   }
 ];
 
@@ -1480,7 +1480,8 @@ async function generateMockup(){
           sc.sceneSpec,
           'Use this JSON spec as scene guidance rather than copying a base photo. Keep architecture consistent with spec while applying current material choice and supplied pattern geometry on panel faces only.',
           'Override any baseline wall material in the JSON with the currently selected material/finish settings from the UI.',
-          sc.key === 'elevator' ? 'CRITICAL ELEVATOR CLEANUP: No horizontal bars/rails/strips across door faces. Only allow clean vertical center seam and perimeter frame.' : ''
+          sc.key === 'elevator' ? 'CRITICAL ELEVATOR CLEANUP: No horizontal bars/rails/strips across door faces. Only allow clean vertical center seam and perimeter frame. Pattern coverage must extend across full door height/width on both leaves with continuous seam alignment.' : '',
+          sc.key === 'wall' || sc.key === 'elevator' ? 'PATTERN SCALE CONTROL: reduce motif size by ~35-45% versus default (finer tiling, higher repeat count).' : ''
         ].filter(Boolean).join(' ');
       }
 
