@@ -1059,6 +1059,7 @@ function setStatus(msg, type='info'){
 }
 
 function fileToText(file){ return file.text(); }
+function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
 function svgToPngDataUrl(svgText, outW=1400, outH=null, fitScale=1){
   return new Promise((resolve,reject)=>{
@@ -1473,6 +1474,9 @@ async function generateMockup(){
     compareSplit = 50;
     renderCompare();
 
+    // Gentle pacing helps reduce provider burst throttling.
+    await sleep(1200);
+
     for (let i = 0; i < scenePresets.length; i++) {
       const sc = scenePresets[i];
       setStatus(`Rendering context ${i+1}/${scenePresets.length}: ${sc.title}…`);
@@ -1497,6 +1501,10 @@ async function generateMockup(){
       const dataUrl = await callImageModel(sceneBase64, scenePrompt);
       generatedScenes.push({ key: sc.key, cls: sc.cls, title: sc.title, dataUrl });
       renderSceneGallery();
+
+      if (i < scenePresets.length - 1) {
+        await sleep(1400);
+      }
     }
 
     dlBtn.disabled = false;
