@@ -23,12 +23,26 @@ First widget MVP for tedcreativemetals.com.
 
 Open `index.html` in a browser or serve with any static server.
 
-### Optional pipeline endpoints (for full Foundry flow)
+### Trace/Upscale pipeline wiring
 
-This app is static. For true server-grade upscale/trace, set globals before app JS runs:
+By default, the widget now points to Supabase Edge Functions in the same project:
 
-- `window.TCM_UPSCALE_URL` — POST endpoint returning `{ bytesBase64Encoded, mimeType }`
-- `window.TCM_TRACE_URL` — POST endpoint returning `{ svg }`
+- `https://wbtpizrlayiedgwrtpwl.functions.supabase.co/trace-svg`
+- `https://wbtpizrlayiedgwrtpwl.functions.supabase.co/upscale-image`
 
-If `TCM_UPSCALE_URL` is not set, upscale falls back to local canvas 2×.
-If `TCM_TRACE_URL` is not set, trace falls back to an in-browser binary SVG approximation.
+You can override either endpoint before the app JS runs:
+
+- `window.TCM_TRACE_URL`
+- `window.TCM_UPSCALE_URL`
+
+Expected contracts:
+
+- Trace endpoint: accepts `{ imageBase64, mimeType, style, traceDetail, output }`, returns `{ svg }`
+- Upscale endpoint: accepts `{ imageBase64, mimeType, scale }`, returns `{ bytesBase64Encoded, mimeType }`
+
+The status line now includes a pipeline mode tag:
+
+- `trace:server | upscale:server` when server endpoints are active
+- `trace:fallback` and/or `upscale:fallback` when browser fallback path is used
+
+If server functions return `501` (not configured), the app automatically falls back in-browser for continuity.

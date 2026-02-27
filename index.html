@@ -496,8 +496,10 @@
 
 <script>
 const PROXY_URL = 'https://wbtpizrlayiedgwrtpwl.functions.supabase.co/gemini-proxy';
-const UPSCALE_URL = window.TCM_UPSCALE_URL || ''; // optional external endpoint
-const TRACE_URL = window.TCM_TRACE_URL || '';     // optional external endpoint
+const DEFAULT_TRACE_URL = 'https://wbtpizrlayiedgwrtpwl.functions.supabase.co/trace-svg';
+const DEFAULT_UPSCALE_URL = 'https://wbtpizrlayiedgwrtpwl.functions.supabase.co/upscale-image';
+const UPSCALE_URL = window.TCM_UPSCALE_URL || DEFAULT_UPSCALE_URL;
+const TRACE_URL = window.TCM_TRACE_URL || DEFAULT_TRACE_URL;
 const HISTORY_KEY = 'tcm_mockup_history_v2';
 
 const STYLE_PROMPTS = {
@@ -1158,9 +1160,15 @@ const scenePresets = [
 const mainPanelPrompt = 'Flat orthographic face-on scan view of a square metal panel. Entire square panel fully visible, centered, no perspective distortion, white/neutral background, clean technical product shot with minimal reflections.';
 
 
+function pipelineModeText(){
+  const traceMode = TRACE_URL ? 'trace:server' : 'trace:fallback';
+  const upMode = UPSCALE_URL ? 'upscale:server' : 'upscale:fallback';
+  return `[${traceMode} | ${upMode}]`;
+}
+
 function setStatus(msg, type='info'){
   statusEl.className = `status ${type==='ok'?'ok':''} ${type==='error'?'error':''}`;
-  statusEl.textContent = msg || '';
+  statusEl.textContent = msg ? `${msg} ${pipelineModeText()}` : '';
 }
 
 function setSourceMode(mode){
@@ -1467,14 +1475,24 @@ async function upscaleDataUrl2xCanvas(dataUrl){
 async function callUpscaleApi(imageDataUrl){
   if (!UPSCALE_URL) return upscaleDataUrl2xCanvas(imageDataUrl);
   const imageBase64 = imageDataUrl.split(',')[1];
-  const r = await fetch(UPSCALE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imageBase64, mimeType: 'image/png', scale: 2 })
-  });
-  const j = await r.json();
-  if (!r.ok || !j?.bytesBase64Encoded) throw new Error(j?.error || `Upscale failed (${r.status})`);
-  return `data:${j.mimeType || 'image/png'};base64,${j.bytesBase64Encoded}`;
+  try {
+    const r = await fetch(UPSCALE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64, mimeType: 'image/png', scale: 2 })
+    });
+    const j = await r.json();
+    if (!r.ok || !j?.bytesBase64Encoded) {
+      if (r.status === 501) {
+        setStatus('Upscale API not configured server-side; using local fallback upscale.');
+        return upscaleDataUrl2xCanvas(imageDataUrl);
+      }
+      throw new Error(j?.error || `Upscale failed (${r.status})`);
+    }
+    return `data:${j.mimeType || 'image/png'};base64,${j.bytesBase64Encoded}`;
+  } catch (err) {
+    throw err;
+  }
 }
 
 async function fallbackTraceToSvg(imageDataUrl){
@@ -1525,7 +1543,13 @@ async function callTraceApi(imageDataUrl, style, traceDetail){
     body: JSON.stringify({ imageBase64, mimeType: 'image/png', style, traceDetail, output: 'svg' })
   });
   const j = await r.json();
-  if (!r.ok || !j?.svg) throw new Error(j?.error || `Trace failed (${r.status})`);
+  if (!r.ok || !j?.svg) {
+    if (r.status === 501) {
+      setStatus('Trace API not configured server-side; using in-browser fallback trace.');
+      return fallbackTraceToSvg(imageDataUrl);
+    }
+    throw new Error(j?.error || `Trace failed (${r.status})`);
+  }
   return j.svg;
 }
 
