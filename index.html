@@ -1481,9 +1481,9 @@ async function callUpscaleApi(imageDataUrl){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageBase64, mimeType: 'image/png', scale: 2 })
     });
-    const j = await r.json();
+    const j = await r.json().catch(() => ({}));
     if (!r.ok || !j?.bytesBase64Encoded) {
-      if (r.status === 501) {
+      if (r.status === 501 || r.status === 404) {
         setStatus('Upscale API not configured server-side; using local fallback upscale.');
         return upscaleDataUrl2xCanvas(imageDataUrl);
       }
@@ -1491,7 +1491,8 @@ async function callUpscaleApi(imageDataUrl){
     }
     return `data:${j.mimeType || 'image/png'};base64,${j.bytesBase64Encoded}`;
   } catch (err) {
-    throw err;
+    setStatus(`Upscale request failed (${String(err?.message || err)}). Using local fallback upscale.`, 'info');
+    return upscaleDataUrl2xCanvas(imageDataUrl);
   }
 }
 
@@ -1537,20 +1538,25 @@ async function callTraceApi(imageDataUrl, style, traceDetail){
     return fallbackTraceToSvg(imageDataUrl);
   }
   const imageBase64 = imageDataUrl.split(',')[1];
-  const r = await fetch(TRACE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imageBase64, mimeType: 'image/png', style, traceDetail, output: 'svg' })
-  });
-  const j = await r.json();
-  if (!r.ok || !j?.svg) {
-    if (r.status === 501) {
-      setStatus('Trace API not configured server-side; using in-browser fallback trace.');
-      return fallbackTraceToSvg(imageDataUrl);
+  try {
+    const r = await fetch(TRACE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64, mimeType: 'image/png', style, traceDetail, output: 'svg' })
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j?.svg) {
+      if (r.status === 501 || r.status === 404) {
+        setStatus('Trace API not configured server-side; using in-browser fallback trace.');
+        return fallbackTraceToSvg(imageDataUrl);
+      }
+      throw new Error(j?.error || `Trace failed (${r.status})`);
     }
-    throw new Error(j?.error || `Trace failed (${r.status})`);
+    return j.svg;
+  } catch (err) {
+    setStatus(`Trace request failed (${String(err?.message || err)}). Using in-browser fallback trace.`, 'info');
+    return fallbackTraceToSvg(imageDataUrl);
   }
-  return j.svg;
 }
 
 function buildEngravePrompt(subject, style){
