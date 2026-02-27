@@ -378,6 +378,52 @@
           <label>Direction (optional)</label>
           <textarea id="direction" placeholder="Example: Keep satin brass, crisp black enamel grooves, slight angle, premium reflections."></textarea>
 
+          <div style="height:10px"></div>
+          <label>AI Pattern Prompt (Nano Banana flow)</label>
+          <textarea id="artPrompt" placeholder="Example: Art deco fan motif with balanced negative space for CNC-ready brass etching"></textarea>
+
+          <div class="row" style="margin-top:10px">
+            <div>
+              <label>Engraving style</label>
+              <select id="engraveStyle">
+                <option value="crosshatch">Cross-hatching</option>
+                <option value="stippling">Stippling</option>
+                <option value="woodcut">Woodcut</option>
+                <option value="copperplate">Copperplate</option>
+                <option value="mezzotint">Mezzotint</option>
+                <option value="technical">Technical sketch</option>
+                <option value="minimalist">Minimalist logo</option>
+                <option value="obsidian">Etched obsidian (inverted)</option>
+              </select>
+            </div>
+            <div>
+              <label>Image resolution</label>
+              <select id="genResolution">
+                <option value="2K">2K</option>
+                <option value="4K">4K</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button id="genPattern" class="btn secondary" type="button">1) Prompt → Image</button>
+            <button id="upscalePattern" class="btn secondary" type="button">2) Upscale 2×</button>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div>
+              <label>Trace detail</label>
+              <select id="traceDetail">
+                <option value="2K">2K</option>
+                <option value="4K" selected>4K</option>
+                <option value="8K">8K</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:end">
+              <button id="tracePattern" class="btn secondary" type="button" style="width:100%">3) Trace → SVG</button>
+            </div>
+          </div>
+          <button id="useTracedSvg" class="btn secondary" type="button" style="margin-top:8px" disabled>Use Traced SVG as Source</button>
+
           <div style="height:12px"></div>
           <button id="go" class="btn">Generate Etched Mockup</button>
           <button id="download" class="btn secondary" disabled style="margin-top:8px">Download Main Mockup PNG</button>
@@ -417,7 +463,21 @@
 
 <script>
 const PROXY_URL = 'https://wbtpizrlayiedgwrtpwl.functions.supabase.co/gemini-proxy';
+const UPSCALE_URL = window.TCM_UPSCALE_URL || ''; // optional external endpoint
+const TRACE_URL = window.TCM_TRACE_URL || '';     // optional external endpoint
 const HISTORY_KEY = 'tcm_mockup_history_v2';
+
+const STYLE_PROMPTS = {
+  stippling: 'Binary black and white stippling illustration of [SUBJECT]. Large distinct pure black dots on pristine white background. No gradients, no halftones.',
+  crosshatch: 'Intricate cross-hatched ink illustration of [SUBJECT]. Pure black lines of varying density. No gray tones, no halftones, binary black and white only.',
+  woodcut: 'Bold black and white woodcut print of [SUBJECT]. Thick organic black shapes with sharp white negative space. No gradients.',
+  copperplate: 'Classic copperplate engraving of [SUBJECT]. Highly detailed precision linework. Pure black ink on stark white background.',
+  mezzotint: 'Binary black and white mezzotint of [SUBJECT]. Dense dithered grain textures, no grayscale pixels.',
+  technical: 'Technical draftsman-style line drawing of [SUBJECT]. Crisp uniform black lines, no shading, schematic blueprint aesthetic.',
+  minimalist: 'Minimalist geometric logo of [SUBJECT]. Thick black strokes and fills, pure white background, flat vector style.',
+  obsidian: 'Etched obsidian art of [SUBJECT]: fine white crystalline lines on pure black background, binary inverted style.'
+};
+const POWER_WORDS = 'Binary / 1-bit Art. No Halftones. No Gradients. CNC-ready. Laser-cut. Vector paths.';
 
 const fallbackSampleData = [
   { category:'Geometric', name:'Deco Arches', svg:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'><rect width='600' height='380' fill='white'/><g fill='none' stroke='black' stroke-width='8'><path d='M40 340H560'/><path d='M80 340V120a220 220 0 0 1 440 0v220'/><path d='M160 340V150a140 140 0 0 1 280 0v190'/><path d='M240 340V180a60 60 0 0 1 120 0v160'/></g></svg>`},
@@ -517,6 +577,9 @@ let currentSvgText = '';
 let currentSourcePngDataUrl = '';
 let generatedDataUrl = '';
 let generatedScenes = [];
+let generatedPatternPng = '';
+let upscaledPatternPng = '';
+let tracedSvgText = '';
 let isGenerating = false;
 let selectedSampleName = '';
 let compareSplit = 50;
@@ -534,6 +597,10 @@ const dlAllBtn = document.getElementById('downloadAll');
 const saveRevBtn = document.getElementById('saveRev');
 const historyList = document.getElementById('historyList');
 const sceneGalleryEl = document.getElementById('sceneGallery');
+const genPatternBtn = document.getElementById('genPattern');
+const upscalePatternBtn = document.getElementById('upscalePattern');
+const tracePatternBtn = document.getElementById('tracePattern');
+const useTracedSvgBtn = document.getElementById('useTracedSvg');
 
 const scenePresets = [
   {
@@ -1334,6 +1401,56 @@ async function callImageModel(imageBase64, fullPrompt){
   throw lastErr || new Error('Image generation failed after retries and fallback.');
 }
 
+async function upscaleDataUrl2xCanvas(dataUrl){
+  const img = new Image();
+  await new Promise((res, rej) => {
+    img.onload = res;
+    img.onerror = () => rej(new Error('Could not load generated image for upscale.'));
+    img.src = dataUrl;
+  });
+  const c = document.createElement('canvas');
+  c.width = img.width * 2;
+  c.height = img.height * 2;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL('image/png');
+}
+
+async function callUpscaleApi(imageDataUrl){
+  if (!UPSCALE_URL) return upscaleDataUrl2xCanvas(imageDataUrl);
+  const imageBase64 = imageDataUrl.split(',')[1];
+  const r = await fetch(UPSCALE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64, mimeType: 'image/png', scale: 2 })
+  });
+  const j = await r.json();
+  if (!r.ok || !j?.bytesBase64Encoded) throw new Error(j?.error || `Upscale failed (${r.status})`);
+  return `data:${j.mimeType || 'image/png'};base64,${j.bytesBase64Encoded}`;
+}
+
+async function callTraceApi(imageDataUrl, style, traceDetail){
+  if (!TRACE_URL) {
+    throw new Error('Trace API is not configured. Set window.TCM_TRACE_URL to your trace endpoint.');
+  }
+  const imageBase64 = imageDataUrl.split(',')[1];
+  const r = await fetch(TRACE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64, mimeType: 'image/png', style, traceDetail, output: 'svg' })
+  });
+  const j = await r.json();
+  if (!r.ok || !j?.svg) throw new Error(j?.error || `Trace failed (${r.status})`);
+  return j.svg;
+}
+
+function buildEngravePrompt(subject, style){
+  const base = STYLE_PROMPTS[style] || STYLE_PROMPTS.crosshatch;
+  return `${base.replace('[SUBJECT]', subject || 'luxury architectural panel motif')}. ${POWER_WORDS}`;
+}
+
 function downloadDataUrl(dataUrl, filename){
   const a = document.createElement('a');
   a.href = dataUrl;
@@ -1419,6 +1536,91 @@ document.getElementById('svgFile').addEventListener('change', async (e)=>{
     setStatus(err.message || 'Failed to load SVG', 'error');
   }
 });
+
+async function generatePatternFromPrompt(){
+  const prompt = document.getElementById('artPrompt').value.trim();
+  const style = document.getElementById('engraveStyle').value;
+  const resolution = document.getElementById('genResolution').value;
+  if (!prompt) {
+    setStatus('Add an AI Pattern Prompt first.', 'error');
+    return;
+  }
+  genPatternBtn.disabled = true;
+  try {
+    setStatus('Generating source image from prompt…');
+    const fullPrompt = buildEngravePrompt(prompt, style);
+    const imageDataUrl = await callImageModel('', `${fullPrompt} Output resolution target: ${resolution}.`);
+    generatedPatternPng = imageDataUrl;
+    upscaledPatternPng = '';
+    tracedSvgText = '';
+    useTracedSvgBtn.disabled = true;
+    srcPreviewTop.innerHTML = `<img src="${generatedPatternPng}" alt="Generated source pattern">`;
+    setStatus('Prompt image generated. Next: Upscale 2× then Trace → SVG.', 'ok');
+  } catch (err) {
+    setStatus(err.message || 'Prompt generation failed', 'error');
+  } finally {
+    genPatternBtn.disabled = false;
+  }
+}
+
+async function upscalePattern(){
+  if (!generatedPatternPng) {
+    setStatus('Generate a prompt image first.', 'error');
+    return;
+  }
+  upscalePatternBtn.disabled = true;
+  try {
+    setStatus(UPSCALE_URL ? 'Upscaling via API…' : 'Upscaling locally (canvas 2×)…');
+    upscaledPatternPng = await callUpscaleApi(generatedPatternPng);
+    srcPreviewTop.innerHTML = `<img src="${upscaledPatternPng}" alt="Upscaled pattern">`;
+    setStatus('Upscale complete. Next: Trace → SVG.', 'ok');
+  } catch (err) {
+    setStatus(err.message || 'Upscale failed', 'error');
+  } finally {
+    upscalePatternBtn.disabled = false;
+  }
+}
+
+async function tracePatternToSvg(){
+  const style = document.getElementById('engraveStyle').value;
+  const traceDetail = document.getElementById('traceDetail').value;
+  const source = upscaledPatternPng || generatedPatternPng;
+  if (!source) {
+    setStatus('Generate (and ideally upscale) a pattern image first.', 'error');
+    return;
+  }
+  tracePatternBtn.disabled = true;
+  try {
+    setStatus('Tracing image to SVG…');
+    tracedSvgText = await callTraceApi(source, style, traceDetail);
+    useTracedSvgBtn.disabled = false;
+    setStatus('Trace complete. Click “Use Traced SVG as Source”.', 'ok');
+  } catch (err) {
+    setStatus(err.message || 'Trace failed', 'error');
+  } finally {
+    tracePatternBtn.disabled = false;
+  }
+}
+
+function useTracedSvgAsSource(){
+  if (!tracedSvgText) return;
+  selectedSampleName = 'AI traced pattern';
+  currentSvgText = tracedSvgText;
+  svgToPngDataUrl(currentSvgText, 1200).then((png) => {
+    currentSourcePngDataUrl = png;
+    generatedDataUrl = '';
+    generatedScenes = [];
+    renderTopSource();
+    renderCompare();
+    renderSceneGallery();
+    dlBtn.disabled = true;
+    dlMainTopBtn.disabled = true;
+    dlAllBtn.disabled = true;
+    saveRevBtn.disabled = true;
+    setStatus('Traced SVG is now active source. You can run Generate Etched Mockup.', 'ok');
+    renderSamples();
+  }).catch((e) => setStatus(e.message || 'Failed to use traced SVG', 'error'));
+}
 
 async function generateMockup(){
   if(!currentSvgText){ setStatus('Upload SVG or choose a pattern first.', 'error'); return; }
@@ -1543,6 +1745,10 @@ renderSceneGallery();
 
 document.getElementById('go').addEventListener('click', generateMockup);
 document.getElementById('saveRev').addEventListener('click', saveRevision);
+genPatternBtn?.addEventListener('click', generatePatternFromPrompt);
+upscalePatternBtn?.addEventListener('click', upscalePattern);
+tracePatternBtn?.addEventListener('click', tracePatternToSvg);
+useTracedSvgBtn?.addEventListener('click', useTracedSvgAsSource);
 document.getElementById('download').addEventListener('click', ()=>{
   if(!generatedDataUrl) return;
   downloadDataUrl(generatedDataUrl, `tcm-etched-mockup-main-${Date.now()}.png`);
