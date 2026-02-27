@@ -31,4 +31,4 @@ This app is static. For true server-grade upscale/trace, set globals before app 
 - `window.TCM_TRACE_URL` — POST endpoint returning `{ svg }`
 
 If `TCM_UPSCALE_URL` is not set, upscale falls back to local canvas 2×.
-If `TCM_TRACE_URL` is not set, trace step is disabled with a helpful error.
+If `TCM_TRACE_URL` is not set, trace falls back to an in-browser binary SVG approximation.
