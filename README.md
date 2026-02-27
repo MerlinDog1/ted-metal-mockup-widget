@@ -4,11 +4,14 @@ First widget MVP for tedcreativemetals.com.
 
 ## What it does
 
-- Upload an SVG (or choose built-in vector samples)
-- **AI pattern pipeline (Foundry flow):** Prompt → Image → Upscale 2× → Trace to SVG
-- Generates a photoreal etched metal mockup (brass/stainless) via image model
-- Keeps geometry faithful to the uploaded vector mask
-- Download result PNG(s)
+- Step 1 source options:
+  - Upload SVG or image
+  - Pick Ted pattern library asset
+  - Prompt a new design (Foundry flow)
+- Foundry flow: Prompt → Image → Upscale 2× → Trace to SVG → Use as source
+- Step 2 material/finish + optional direction
+- Step 3 scene selection (square/main, lobby wall, lift, panel-bank variant)
+- Step 4 generate mockups + download outputs
 
 ## Stack
 

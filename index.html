@@ -73,6 +73,7 @@
     }
     .btn:hover { transform: translateY(-1px); }
     .btn.secondary { background: #17253a; border-color: #384b6a; color: #d6e6ff; }
+    .btn.secondary.active { border-color:#67d6ff; box-shadow:0 0 0 2px rgba(99,209,255,.2) inset; }
     .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 
     .tabs { display:none; }
@@ -336,8 +337,19 @@
     <div class="layout">
       <div class="controls-grid">
         <section class="card">
+          <h3 style="margin:0 0 8px">Step 1 — Choose your design source</h3>
+          <div class="row">
+            <button id="modeUpload" class="btn secondary" type="button">Option 1: Upload image / SVG</button>
+            <button id="modePattern" class="btn secondary" type="button">Option 2: Pick Ted pattern</button>
+          </div>
+          <button id="modePrompt" class="btn secondary" type="button" style="margin-top:8px;width:100%">Option 3: Prompt what you want</button>
+
+          <div style="height:10px"></div>
           <label>Upload SVG</label>
           <input id="svgFile" type="file" accept=".svg,image/svg+xml" />
+          <div style="height:8px"></div>
+          <label>Upload image (PNG/JPG) — can be used with prompt/upscale/trace pipeline</label>
+          <input id="sourceImageFile" type="file" accept="image/png,image/jpeg,image/webp" />
 
           <div style="height:10px"></div>
           <label>Pattern library (scroll sideways)</label>
@@ -346,37 +358,6 @@
             <div class="samples" id="samples"></div>
             <button id="carNext" class="car-btn next" type="button">›</button>
           </div>
-
-          <div style="height:10px"></div>
-          <div class="row">
-            <div>
-              <label>Metal</label>
-              <select id="metal">
-                <option value="brass">Brass</option>
-                <option value="stainless">Stainless steel</option>
-              </select>
-            </div>
-            <div>
-              <label>Finish</label>
-              <select id="finish">
-                <option value="brushed">Brushed</option>
-                <option value="polished">Polished</option>
-                <option value="aged">Aged patina</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="height:10px"></div>
-          <label>Lighting scene</label>
-          <select id="lighting">
-            <option value="studio">Studio product shot</option>
-            <option value="lobby">Architectural lobby</option>
-            <option value="daylight">Soft daylight wall</option>
-          </select>
-
-          <div style="height:10px"></div>
-          <label>Direction (optional)</label>
-          <textarea id="direction" placeholder="Example: Keep satin brass, crisp black enamel grooves, slight angle, premium reflections."></textarea>
 
           <div style="height:10px"></div>
           <label>AI Pattern Prompt (Nano Banana flow)</label>
@@ -404,7 +385,6 @@
               </select>
             </div>
           </div>
-
           <div class="row" style="margin-top:10px">
             <button id="genPattern" class="btn secondary" type="button">1) Prompt → Image</button>
             <button id="upscalePattern" class="btn secondary" type="button">2) Upscale 2×</button>
@@ -424,7 +404,59 @@
           </div>
           <button id="useTracedSvg" class="btn secondary" type="button" style="margin-top:8px" disabled>Use Traced SVG as Source</button>
 
-          <div style="height:12px"></div>
+          <hr style="border-color:#2a3853;border-style:solid;border-width:1px 0 0;margin:14px 0">
+          <h3 style="margin:0 0 8px">Step 2 — Material + direction</h3>
+          <div class="row">
+            <div>
+              <label>Metal</label>
+              <select id="metal">
+                <option value="brass">Brass</option>
+                <option value="stainless">Stainless steel</option>
+              </select>
+            </div>
+            <div>
+              <label>Finish</label>
+              <select id="finish">
+                <option value="brushed">Brushed</option>
+                <option value="polished">Polished</option>
+                <option value="aged">Aged patina</option>
+              </select>
+            </div>
+          </div>
+          <div style="height:10px"></div>
+          <label>Direction (optional)</label>
+          <textarea id="direction" placeholder="Example: Keep satin brass, crisp black enamel grooves, slight angle, premium reflections."></textarea>
+
+          <hr style="border-color:#2a3853;border-style:solid;border-width:1px 0 0;margin:14px 0">
+          <h3 style="margin:0 0 8px">Step 3 — Scene selection</h3>
+          <div class="row">
+            <div>
+              <label>Lighting scene</label>
+              <select id="lighting">
+                <option value="studio">Studio product shot</option>
+                <option value="lobby">Architectural lobby</option>
+                <option value="daylight">Soft daylight wall</option>
+              </select>
+            </div>
+            <div>
+              <label>Output scene mode</label>
+              <select id="sceneMode">
+                <option value="all">All scenes (square + lobby + lift + panels)</option>
+                <option value="single">Single selected scene</option>
+              </select>
+            </div>
+          </div>
+          <div style="height:10px"></div>
+          <label>Single scene (when scene mode = single)</label>
+          <select id="sceneKey">
+            <option value="main">Square tile / main panel</option>
+            <option value="wall">Lobby wall</option>
+            <option value="elevator">Lift doors</option>
+            <option value="panels">Panels</option>
+          </select>
+
+          <hr style="border-color:#2a3853;border-style:solid;border-width:1px 0 0;margin:14px 0">
+          <h3 style="margin:0 0 8px">Step 4 — Generate</h3>
           <button id="go" class="btn">Generate Etched Mockup</button>
           <button id="download" class="btn secondary" disabled style="margin-top:8px">Download Main Mockup PNG</button>
           <button id="downloadAll" class="btn secondary" disabled style="margin-top:8px">Download All Scene PNGs</button>
@@ -601,6 +633,10 @@ const genPatternBtn = document.getElementById('genPattern');
 const upscalePatternBtn = document.getElementById('upscalePattern');
 const tracePatternBtn = document.getElementById('tracePattern');
 const useTracedSvgBtn = document.getElementById('useTracedSvg');
+const sourceImageFileEl = document.getElementById('sourceImageFile');
+const modeUploadBtn = document.getElementById('modeUpload');
+const modePatternBtn = document.getElementById('modePattern');
+const modePromptBtn = document.getElementById('modePrompt');
 
 const scenePresets = [
   {
@@ -1125,6 +1161,13 @@ function setStatus(msg, type='info'){
   statusEl.textContent = msg || '';
 }
 
+function setSourceMode(mode){
+  [modeUploadBtn, modePatternBtn, modePromptBtn].forEach((b)=>b?.classList.remove('active'));
+  if (mode === 'upload') modeUploadBtn?.classList.add('active');
+  if (mode === 'pattern') modePatternBtn?.classList.add('active');
+  if (mode === 'prompt') modePromptBtn?.classList.add('active');
+}
+
 function fileToText(file){ return file.text(); }
 function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
 
@@ -1234,6 +1277,7 @@ function renderSamples(){
       d.className = 'sample' + (selectedSampleName === s.name ? ' active':'');
       d.innerHTML = `${s.svg}<div>${s.name}</div>`;
       d.onclick = async () => {
+        setSourceMode('pattern');
         selectedSampleName = s.name;
         d.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         currentSvgText = s.svg;
@@ -1524,6 +1568,7 @@ document.getElementById('svgFile').addEventListener('change', async (e)=>{
   try {
     const txt = await fileToText(f);
     if(!txt.includes('<svg')) throw new Error('File does not appear to be valid SVG.');
+    setSourceMode('upload');
     selectedSampleName = '';
     currentSvgText = txt;
     renderTopSource();
@@ -1537,6 +1582,29 @@ document.getElementById('svgFile').addEventListener('change', async (e)=>{
   }
 });
 
+sourceImageFileEl?.addEventListener('change', async (e)=>{
+  const f = e.target.files?.[0];
+  if(!f) return;
+  if(!/^image\//.test(f.type)) { setStatus('Please upload a PNG/JPG/WEBP image.', 'error'); return; }
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = () => reject(new Error('Could not read image file.'));
+      fr.readAsDataURL(f);
+    });
+    setSourceMode('upload');
+    generatedPatternPng = String(dataUrl);
+    upscaledPatternPng = '';
+    tracedSvgText = '';
+    useTracedSvgBtn.disabled = true;
+    srcPreviewTop.innerHTML = `<img src="${generatedPatternPng}" alt="Uploaded source image">`;
+    setStatus(`Loaded source image ${f.name}. You can Upscale 2× and Trace → SVG.`, 'ok');
+  } catch (err) {
+    setStatus(err.message || 'Failed to load source image', 'error');
+  }
+});
+
 async function generatePatternFromPrompt(){
   const prompt = document.getElementById('artPrompt').value.trim();
   const style = document.getElementById('engraveStyle').value;
@@ -1547,6 +1615,7 @@ async function generatePatternFromPrompt(){
   }
   genPatternBtn.disabled = true;
   try {
+    setSourceMode('prompt');
     setStatus('Generating source image from prompt…');
     const fullPrompt = buildEngravePrompt(prompt, style);
     const imageDataUrl = await callImageModel('', `${fullPrompt} Output resolution target: ${resolution}.`);
@@ -1671,6 +1740,9 @@ async function generateMockup(){
 
     generatedScenes = [];
 
+    const sceneMode = document.getElementById('sceneMode').value;
+    const sceneKey = document.getElementById('sceneKey').value;
+
     setStatus('Rendering main panel (1:1 square)…');
     generatedDataUrl = await callImageModel(imageBase64ByScene.main, [strictLock, `Scene directive: ${mainPanelPrompt} Strict aspect ratio: 1:1 square.`].join(' '));
     compareSplit = 50;
@@ -1679,9 +1751,21 @@ async function generateMockup(){
     // Gentle pacing helps reduce provider burst throttling.
     await sleep(1200);
 
-    for (let i = 0; i < scenePresets.length; i++) {
-      const sc = scenePresets[i];
-      setStatus(`Rendering context ${i+1}/${scenePresets.length}: ${sc.title}…`);
+    let selectedScenes = [...scenePresets];
+    if (sceneMode === 'single' && sceneKey !== 'main') {
+      if (sceneKey === 'panels') {
+        selectedScenes = [{ ...scenePresets[0], key: 'wall', title: 'Panel Bank / Feature Panels' }];
+      } else {
+        selectedScenes = scenePresets.filter(s => s.key === sceneKey);
+      }
+    }
+    if (sceneMode === 'single' && sceneKey === 'main') {
+      selectedScenes = [];
+    }
+
+    for (let i = 0; i < selectedScenes.length; i++) {
+      const sc = selectedScenes[i];
+      setStatus(`Rendering context ${i+1}/${selectedScenes.length}: ${sc.title}…`);
 
       let sceneBase64 = imageBase64ByScene[sc.key] || imageBase64ByScene.main;
       let scenePrompt = [strictLock, `Scene directive: ${sc.prompt}`].join(' ');
@@ -1704,7 +1788,7 @@ async function generateMockup(){
       generatedScenes.push({ key: sc.key, cls: sc.cls, title: sc.title, dataUrl });
       renderSceneGallery();
 
-      if (i < scenePresets.length - 1) {
+      if (i < selectedScenes.length - 1) {
         await sleep(1400);
       }
     }
@@ -1713,7 +1797,7 @@ async function generateMockup(){
     dlMainTopBtn.disabled = false;
     dlAllBtn.disabled = false;
     saveRevBtn.disabled = false;
-    setStatus(`Done. Built 3 views (main + ${generatedScenes.length} installed contexts).`, 'ok');
+    setStatus(`Done. Built main + ${generatedScenes.length} installed context view(s).`, 'ok');
   } catch(err) {
     console.error(err);
     setStatus(err.message || 'Generation failed', 'error');
@@ -1749,6 +1833,9 @@ genPatternBtn?.addEventListener('click', generatePatternFromPrompt);
 upscalePatternBtn?.addEventListener('click', upscalePattern);
 tracePatternBtn?.addEventListener('click', tracePatternToSvg);
 useTracedSvgBtn?.addEventListener('click', useTracedSvgAsSource);
+modeUploadBtn?.addEventListener('click', ()=>{ setSourceMode('upload'); setStatus('Upload an SVG or image to begin.'); });
+modePatternBtn?.addEventListener('click', ()=>{ setSourceMode('pattern'); setStatus('Pick one of Ted’s patterns below.'); });
+modePromptBtn?.addEventListener('click', ()=>{ setSourceMode('prompt'); setStatus('Write a prompt, then run Prompt → Image.'); });
 document.getElementById('download').addEventListener('click', ()=>{
   if(!generatedDataUrl) return;
   downloadDataUrl(generatedDataUrl, `tcm-etched-mockup-main-${Date.now()}.png`);
@@ -1781,6 +1868,7 @@ renderSceneGallery();
   setStatus('Revision history cleared.');
 });
 
+setSourceMode('pattern');
 renderSamples();
 loadPatternLibrary();
 renderTopSource();
